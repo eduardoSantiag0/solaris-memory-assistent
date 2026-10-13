@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="design/solaris-handoff/assets/assinatura-horizontal.svg" alt="solaris" width="300" />
+</p>
+
 # 🪐 solaris-memory-assistent
 
 🇧🇷 Português (este arquivo) · 🇺🇸 [English](README.md)
