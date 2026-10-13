@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aparência</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#172621}a:hover{color:#995F4C}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.ib{width:44px;height:44px;flex-shrink:0;border:1px solid transparent;background:transparent;color:#172621;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.nv{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#172621;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;border-top:2px solid transparent;margin-top:-1px}
+.nv[aria-current]{border-top-color:#995F4C;font-weight:600}
+button:focus-visible,a:focus-visible{outline:2px solid #995F4C;outline-offset:2px}
+.sec{display:flex;flex-direction:column;gap:8px;border-top:1px solid #172621;padding-top:10px}
+.seg{flex:1 1 0;min-height:44px;border:0;border-right:1px solid #172621;background:transparent;color:#172621;font-family:'IBM Plex Mono',monospace;font-size:13px;cursor:pointer;border-radius:0}
+.seg:last-child{border-right:0}
+.pal{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 12px;border:1px solid #172621;cursor:pointer;color:#172621;text-align:left;font-family:'IBM Plex Sans',sans-serif;font-size:15px;border-radius:0;box-sizing:border-box}
+.dot{width:16px;height:16px;border:1px solid #172621;border-radius:50%;flex-shrink:0;box-sizing:border-box}
+.bs{min-height:48px;border:1px solid #172621;border-radius:0;background:transparent;color:#172621;font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E8E5D8; color: #172621; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-bottom: 1px solid #172621">
+<a href="08-ajustes.html" class="ib" aria-label="Voltar para Ajustes"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 7l-5 5 5 5"/></svg></a>
+<h1 class="mono" style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 1px">Aparência</h1>
+</header>
+
+<main style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 16px">
+
+<section class="sec" aria-labelledby="ap1" style="border-top: 0; padding-top: 0">
+<h2 id="ap1" class="meta" style="margin: 0; font-weight: 600">TEMA</h2>
+<div role="radiogroup" aria-labelledby="ap1" style="display: flex; border: 1px solid #172621">
+
+<button class="seg" role="radio" aria-checked="false" style="background: transparent; font-weight: 400">Claro</button>
+
+<button class="seg" role="radio" aria-checked="false" style="background: transparent; font-weight: 400">Escuro</button>
+
+<button class="seg" role="radio" aria-checked="true" style="background: #B8A47B; font-weight: 600">Sistema</button>
+
+</div>
+</section>
+
+<section class="sec" aria-labelledby="ap2">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 id="ap2" class="meta" style="margin: 0; font-weight: 600">PALETA</h2><span class="meta">OFICIAL: ESTAÇÃO</span></div>
+<div role="radiogroup" aria-labelledby="ap2" style="display: flex; flex-direction: column; gap: 6px">
+
+<button class="pal" role="radio" aria-checked="true" style="background: #F3F1E8">
+<span class="dot" style="background: #172621"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 600">Estação</span><span class="meta">OFICIAL · PADRÃO</span></span>
+<span aria-hidden="true" style="display: flex; border: 1px solid #172621">
+<span style="width: 12px; height: 20px; background: #172621"></span><span style="width: 12px; height: 20px; background: #566C5B"></span><span style="width: 12px; height: 20px; background: #E8E5D8"></span><span style="width: 12px; height: 20px; background: #B8A47B"></span><span style="width: 12px; height: 20px; background: #995F4C"></span>
+</span>
+</button>
+
+<button class="pal" role="radio" aria-checked="false" style="background: transparent">
+<span class="dot" style="background: transparent"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 600">Biblioteca</span><span class="meta">AMEIXA E OCRE</span></span>
+<span aria-hidden="true" style="display: flex; border: 1px solid #172621">
+<span style="width: 12px; height: 20px; background: #1E1B24"></span><span style="width: 12px; height: 20px; background: #6B5A6E"></span><span style="width: 12px; height: 20px; background: #EAE4D9"></span><span style="width: 12px; height: 20px; background: #C49A55"></span><span style="width: 12px; height: 20px; background: #8C3F3F"></span>
+</span>
+</button>
+
+<button class="pal" role="radio" aria-checked="false" style="background: transparent">
+<span class="dot" style="background: transparent"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 600">Gelo</span><span class="meta">AZUL POLAR</span></span>
+<span aria-hidden="true" style="display: flex; border: 1px solid #172621">
+<span style="width: 12px; height: 20px; background: #14202E"></span><span style="width: 12px; height: 20px; background: #5E7387"></span><span style="width: 12px; height: 20px; background: #E7EBEC"></span><span style="width: 12px; height: 20px; background: #A9BFCF"></span><span style="width: 12px; height: 20px; background: #B5562E"></span>
+</span>
+</button>
+
+<button class="pal" role="radio" aria-checked="false" style="background: transparent">
+<span class="dot" style="background: transparent"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 600">Deserto</span><span class="meta">TERRA E ARGILA</span></span>
+<span aria-hidden="true" style="display: flex; border: 1px solid #172621">
+<span style="width: 12px; height: 20px; background: #2A211B"></span><span style="width: 12px; height: 20px; background: #7A7F62"></span><span style="width: 12px; height: 20px; background: #ECE3D2"></span><span style="width: 12px; height: 20px; background: #C9946B"></span><span style="width: 12px; height: 20px; background: #A24E32"></span>
+</span>
+</button>
+
+<button class="pal" role="radio" aria-checked="false" style="background: transparent">
+<span class="dot" style="background: transparent"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 600">Crepúsculo</span><span class="meta">VIOLETA E LILÁS</span></span>
+<span aria-hidden="true" style="display: flex; border: 1px solid #172621">
+<span style="width: 12px; height: 20px; background: #1F1A2E"></span><span style="width: 12px; height: 20px; background: #6F6488"></span><span style="width: 12px; height: 20px; background: #ECE8F0"></span><span style="width: 12px; height: 20px; background: #B9A6D6"></span><span style="width: 12px; height: 20px; background: #9B4F5C"></span>
+</span>
+</button>
+
+</div>
+</section>
+
+<section class="sec" aria-labelledby="ap3">
+<h2 id="ap3" class="meta" style="margin: 0; font-weight: 600">ESTILOS IMPORTADOS</h2>
+<div style="border: 1px dashed #172621; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<span style="font-size: 15px">Nenhum estilo importado ainda.</span>
+<span style="font-size: 14px; line-height: 1.45">Um arquivo .json com as cinco cores (base, linha, papel, destaque e ação). O app confere o contraste antes de aplicar.</span>
+<button class="bs" style="padding: 0 14px"><svg class="ln" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>Importar estilo</button>
+</div>
+</section>
+
+</main>
+
+<nav aria-label="Navegação principal" style="height: 64px; flex-shrink: 0; display: flex; border-top: 1px solid #172621">
+<a href="02-chat.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>CHAT</a>
+<a href="05-memorias.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>MEMÓRIAS</a>
+<a href="08-ajustes.html" class="nv" aria-current="page"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M16 7h4M4 17h2M10 17h10"/><rect x="12" y="5" width="4" height="4"/><rect x="6" y="15" width="4" height="4"/></svg>AJUSTES</a>
+</nav>
+
+</div>
+</body>
+</html>

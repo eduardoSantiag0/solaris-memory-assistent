@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat — escuro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B8A47B}a:hover{color:#E8E5D8}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px;color:#B8A47B}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.ob{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:#E8E5D8;background:transparent;border:1px solid #E8E5D8;min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border-radius:0;text-decoration:none}
+.ib{width:44px;height:44px;flex-shrink:0;border:1px solid #E8E5D8;background:transparent;color:#E8E5D8;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.send{width:44px;height:44px;flex-shrink:0;border:0;background:#995F4C;color:#E8E5D8;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.in{flex-grow:1;min-width:0;height:44px;box-sizing:border-box;border:1px solid #E8E5D8;border-radius:0;padding:0 12px;font-size:16px;font-family:'IBM Plex Sans',sans-serif;background:#1F332C;color:#E8E5D8}
+.in::placeholder{color:#b9bfb4}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #B8A47B;outline-offset:2px}
+.nv{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#E8E5D8;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;border-top:2px solid transparent;margin-top:-1px}
+.nv[aria-current]{border-top-color:#B8A47B;color:#B8A47B;font-weight:600}
+.ub{align-self:flex-end;max-width:80%;background:#B8A47B;color:#172621;padding:10px 12px;font-size:16px;line-height:1.45}
+.ans{display:flex;flex-direction:column;gap:6px;max-width:92%;font-size:16px;line-height:1.45}
+.ficha{display:block;text-decoration:none;color:#E8E5D8;background:#1F332C;border:1px solid #566C5B;position:relative}
+.ficha:hover{color:#E8E5D8}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #172621; color: #E8E5D8; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid #566C5B">
+<svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink: 0"><circle cx="32" cy="24" r="12" fill="#B8A47B"/><path d="M8 40h48" stroke="#E8E5D8" stroke-width="4" stroke-linecap="square" fill="none"/><g fill="#B8A47B" opacity="0.6"><rect x="21" y="46" width="22" height="4"/><rect x="27" y="53" width="10" height="4"/></g></svg>
+<span class="mono" style="font-size: 16px; font-weight: 600; letter-spacing: 1px; flex-grow: 1">solaris</span>
+<span class="meta" style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; background: #B8A47B"></span>VPN · OK</span>
+</header>
+
+<main style="flex-grow: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding: 16px">
+
+<div class="meta" style="align-self: center">— 13/10/2026 —</div>
+
+<div class="ub"><span class="mono" style="font-weight: 600">/add-temp 2</span> Deixei a chave do carro na gaveta da cozinha.</div>
+
+<div class="ans">
+<div class="meta">SOLARIS · 21:40</div>
+<div>Salva como temporária. Vale até 15/10, 21:40.</div>
+</div>
+
+<div class="ub">Onde deixei a chave do carro?</div>
+
+<div class="ans" style="gap: 8px">
+<div class="meta">SOLARIS · 21:52</div>
+<div>Na <b style="font-weight: 600">gaveta da cozinha</b>.</div>
+<a href="06-detalhe.html" class="ficha">
+<div class="meta" style="display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #566C5B"><span>FICHA Nº 7C1E</span><span>13/10/2026 · 21:40</span></div>
+<div style="padding: 12px 12px 10px; font-size: 16px; line-height: 1.45">Deixei a chave do carro na gaveta da cozinha.</div>
+<div class="meta" style="display: flex; align-items: center; gap: 6px; padding: 0 12px 18px; color: #E8E5D8"><svg class="ln" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: #B8A47B"><path d="M7 3h10L7 21h10z"/></svg>TEMPORÁRIA · VENCE 15/10 21:40</div>
+<span aria-hidden="true" style="position: absolute; left: 50%; bottom: 5px; width: 8px; height: 8px; margin-left: -5px; border: 1px solid #566C5B; border-radius: 50%"></span>
+</a>
+</div>
+
+<div class="ub">Qual é meu RG?</div>
+
+<div class="ans" style="gap: 8px">
+<div class="meta">SOLARIS · 21:53</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span class="mono" style="font-size: 16px; letter-spacing: 1px; padding: 9px 12px; border: 1px solid #566C5B; background: #1F332C">••.•••.•••-•</span>
+<a href="12-sensivel.html" class="ob"><svg class="ln" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Revelar</a>
+</div>
+<div class="meta" style="display: flex; align-items: center; gap: 6px; color: #E8E5D8"><svg class="ln" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: #B8A47B"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>SENSÍVEL · PEDE BIOMETRIA</div>
+</div>
+
+</main>
+
+<div style="flex-shrink: 0; border-top: 1px solid #566C5B; padding: 12px 16px; display: flex; gap: 8px">
+<a href="04-nova-memoria.html" class="ib" aria-label="Nova memória"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+<label for="cme" class="sr">Mensagem</label>
+<input id="cme" class="in" type="text" placeholder="Pergunte algo…">
+<button class="send" aria-label="Enviar"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg></button>
+</div>
+
+<nav aria-label="Navegação principal" style="height: 64px; flex-shrink: 0; display: flex; border-top: 1px solid #566C5B">
+<a href="13-chat-escuro.html" class="nv" aria-current="page"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>CHAT</a>
+<a href="14-memorias-escuro.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>MEMÓRIAS</a>
+<a href="08-ajustes.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M16 7h4M4 17h2M10 17h10"/><rect x="12" y="5" width="4" height="4"/><rect x="6" y="15" width="4" height="4"/></svg>AJUSTES</a>
+</nav>
+
+</div>
+</body>
+</html>

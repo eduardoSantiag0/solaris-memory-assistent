@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memórias</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#172621}a:hover{color:#995F4C}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.nv{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#172621;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;border-top:2px solid transparent;margin-top:-1px}
+.nv[aria-current]{border-top-color:#995F4C;font-weight:600}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #995F4C;outline-offset:2px}
+.fl{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.6px;color:#172621;background:transparent;border:0;border-bottom:2px solid transparent;min-height:44px;padding:0 2px;cursor:pointer}
+.fl[aria-pressed="true"]{border-bottom-color:#995F4C;font-weight:600}
+.ficha{display:block;text-decoration:none;color:#172621;background:#F3F1E8;border:1px solid #172621}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid #172621}
+.stamp{font-family:'IBM Plex Mono',monospace;font-size:12px;display:inline-flex;align-items:center;gap:5px;padding:2px 6px;border:1px solid #172621}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+input::placeholder{color:#4a5d4f}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E8E5D8; color: #172621; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid #172621">
+<span style="width: 30px; height: 30px; flex-shrink: 0; background: #172621; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="12" fill="#B8A47B"/><path d="M8 40h48" stroke="#E8E5D8" stroke-width="4" stroke-linecap="square" fill="none"/><g fill="#B8A47B" opacity="0.6"><rect x="21" y="46" width="22" height="4"/><rect x="27" y="53" width="10" height="4"/></g></svg></span>
+<h1 class="mono" style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 1px; flex-grow: 1">Memórias <span style="font-weight: 400">· 14</span></h1>
+<span class="meta" style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; background: #566C5B"></span>VPN · OK</span>
+</header>
+
+<div style="flex-shrink: 0; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #172621">
+<div style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1px solid #172621; padding: 0 12px; background: #F3F1E8">
+<svg class="ln" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/></svg>
+<label for="cb" class="sr">Buscar memórias</label>
+<input id="cb" type="search" placeholder="Buscar: chave, RG, psicólogo…" style="flex-grow: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; font-family: 'IBM Plex Sans', sans-serif; color: #172621">
+</div>
+<div role="group" aria-label="Filtrar por tipo" style="display: flex; gap: 16px">
+<button class="fl" aria-pressed="true">TODAS</button>
+<button class="fl" aria-pressed="false">PERMANENTES</button>
+<button class="fl" aria-pressed="false">TEMPORÁRIAS</button>
+</div>
+</div>
+
+<main style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div class="meta" style="display: flex; justify-content: space-between"><span>VIGENTES · 13</span><span>MAIS RECENTES</span></div>
+
+<a href="06-detalhe.html" class="ficha">
+<div class="hd"><span class="meta">Nº 7C1E</span><span class="stamp" style="border-color: #995F4C"><svg class="ln" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #995F4C"><path d="M7 3h10L7 21h10z"/></svg>TEMPORÁRIA · 1D 23H</span></div>
+<div style="padding: 10px 12px 4px; font-size: 16px; line-height: 1.4">Deixei a chave do carro na gaveta da cozinha.</div>
+<div class="meta" style="padding: 0 12px 10px">13/10/2026 · 21:40</div>
+</a>
+
+<a href="06-detalhe.html" class="ficha">
+<div class="hd"><span class="meta">Nº 5A90</span><span class="stamp" style="border-color: #995F4C"><svg class="ln" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #995F4C"><path d="M7 3h10L7 21h10z"/></svg>TEMPORÁRIA · 6H</span></div>
+<div style="padding: 10px 12px 4px; font-size: 16px; line-height: 1.4">Estacionei no piso G2, vaga 31.</div>
+<div class="meta" style="padding: 0 12px 10px">13/10/2026 · 14:05</div>
+</a>
+
+<a href="06-detalhe.html" class="ficha">
+<div class="hd"><span class="meta">Nº A019</span><span style="display: inline-flex; gap: 6px"><span class="stamp"><svg class="ln" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>PERMANENTE</span><span class="stamp" style="border-color: #995F4C"><svg class="ln" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #995F4C"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>SENSÍVEL</span></span></div>
+<div style="padding: 10px 12px 4px; font-size: 16px; line-height: 1.4">Meu RG é <span class="mono" style="letter-spacing: 1px">••.•••.•••-•</span></div>
+<div class="meta" style="padding: 0 12px 10px">02/09/2026 · 10:12</div>
+</a>
+
+<a href="06-detalhe.html" class="ficha">
+<div class="hd"><span class="meta">Nº 3F42</span><span class="stamp"><svg class="ln" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>PERMANENTE</span></div>
+<div style="padding: 10px 12px 4px; font-size: 16px; line-height: 1.4">Psicólogo: Rua das Algas, 72, sala 204.</div>
+<div class="meta" style="padding: 0 12px 10px">28/08/2026 · 18:30</div>
+</a>
+
+<div class="meta" style="margin-top: 6px; padding-top: 10px; border-top: 1px dashed #172621">VENCIDAS · 1 · FORA DAS RESPOSTAS</div>
+
+<a href="06-detalhe.html" class="ficha" style="border-style: dashed; background: transparent">
+<div class="hd" style="border-bottom-style: dashed"><span class="meta">Nº 61B0</span><span class="stamp" style="border-style: dashed">VENCIDA EM 10/10</span></div>
+<div style="padding: 10px 12px; font-size: 16px; line-height: 1.4; color: #3f5045; text-decoration: line-through; text-decoration-thickness: 1px">Guarda-chuva ficou no porta-malas.</div>
+</a>
+</main>
+
+<nav aria-label="Navegação principal" style="height: 64px; flex-shrink: 0; display: flex; border-top: 1px solid #172621">
+<a href="02-chat.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>CHAT</a>
+<a href="05-memorias.html" class="nv" aria-current="page"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>MEMÓRIAS</a>
+<a href="08-ajustes.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M16 7h4M4 17h2M10 17h10"/><rect x="12" y="5" width="4" height="4"/><rect x="6" y="15" width="4" height="4"/></svg>AJUSTES</a>
+</nav>
+
+</div>
+</body>
+</html>

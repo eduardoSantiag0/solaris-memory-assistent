@@ -1,0 +1,315 @@
+{
+  "formato": "solaris-style",
+  "versao": 1,
+  "paletaPadrao": "estacao",
+  "temaPadrao": "sistema",
+  "paletas": {
+    "estacao": {
+      "nome": "Estação",
+      "oficial": true,
+      "origem": {
+        "base": "#172621",
+        "linha": "#566C5B",
+        "papel": "#E8E5D8",
+        "destaque": "#B8A47B",
+        "acao": "#995F4C"
+      },
+      "claro": {
+        "fundo": "#E8E5D8",
+        "superficie": "#F3F1E8",
+        "texto": "#172621",
+        "filete": "#172621",
+        "usuario": "#B8A47B",
+        "textoSobreUsuario": "#172621",
+        "acao": "#995F4C",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#E8E5D8",
+        "status": "#566C5B",
+        "foco": "#995F4C",
+        "trilho": "#C9C6B8",
+        "veu": "#1726219E"
+      },
+      "escuro": {
+        "fundo": "#172621",
+        "superficie": "#1F332C",
+        "texto": "#E8E5D8",
+        "textoSecundario": "#B8A47B",
+        "filete": "#566C5B",
+        "usuario": "#B8A47B",
+        "textoSobreUsuario": "#172621",
+        "acao": "#995F4C",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#E8E5D8",
+        "status": "#B8A47B",
+        "foco": "#B8A47B",
+        "trilho": "#566C5B"
+      }
+    },
+    "biblioteca": {
+      "nome": "Biblioteca",
+      "oficial": false,
+      "origem": {
+        "base": "#1E1B24",
+        "linha": "#6B5A6E",
+        "papel": "#EAE4D9",
+        "destaque": "#C49A55",
+        "acao": "#8C3F3F"
+      },
+      "claro": {
+        "fundo": "#EAE4D9",
+        "superficie": "#F4F0E8",
+        "texto": "#1E1B24",
+        "filete": "#1E1B24",
+        "usuario": "#C49A55",
+        "textoSobreUsuario": "#1E1B24",
+        "acao": "#8C3F3F",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#EAE4D9",
+        "status": "#6B5A6E",
+        "foco": "#8C3F3F",
+        "trilho": "#C9C6B8",
+        "veu": "#1E1B249E"
+      },
+      "escuro": {
+        "fundo": "#1E1B24",
+        "superficie": "#2A2531",
+        "texto": "#EAE4D9",
+        "textoSecundario": "#C49A55",
+        "filete": "#6B5A6E",
+        "usuario": "#C49A55",
+        "textoSobreUsuario": "#1E1B24",
+        "acao": "#8C3F3F",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#EAE4D9",
+        "status": "#C49A55",
+        "foco": "#C49A55",
+        "trilho": "#6B5A6E"
+      }
+    },
+    "gelo": {
+      "nome": "Gelo",
+      "oficial": false,
+      "origem": {
+        "base": "#14202E",
+        "linha": "#5E7387",
+        "papel": "#E7EBEC",
+        "destaque": "#A9BFCF",
+        "acao": "#B5562E"
+      },
+      "claro": {
+        "fundo": "#E7EBEC",
+        "superficie": "#F3F5F5",
+        "texto": "#14202E",
+        "filete": "#14202E",
+        "usuario": "#A9BFCF",
+        "textoSobreUsuario": "#14202E",
+        "acao": "#B5562E",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#E7EBEC",
+        "status": "#5E7387",
+        "foco": "#B5562E",
+        "trilho": "#C9C6B8",
+        "veu": "#14202E9E"
+      },
+      "escuro": {
+        "fundo": "#14202E",
+        "superficie": "#1D2C3D",
+        "texto": "#E7EBEC",
+        "textoSecundario": "#A9BFCF",
+        "filete": "#5E7387",
+        "usuario": "#A9BFCF",
+        "textoSobreUsuario": "#14202E",
+        "acao": "#B5562E",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#E7EBEC",
+        "status": "#A9BFCF",
+        "foco": "#A9BFCF",
+        "trilho": "#5E7387"
+      }
+    },
+    "deserto": {
+      "nome": "Deserto",
+      "oficial": false,
+      "origem": {
+        "base": "#2A211B",
+        "linha": "#7A7F62",
+        "papel": "#ECE3D2",
+        "destaque": "#C9946B",
+        "acao": "#A24E32"
+      },
+      "claro": {
+        "fundo": "#ECE3D2",
+        "superficie": "#F5EFE3",
+        "texto": "#2A211B",
+        "filete": "#2A211B",
+        "usuario": "#C9946B",
+        "textoSobreUsuario": "#2A211B",
+        "acao": "#A24E32",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#ECE3D2",
+        "status": "#7A7F62",
+        "foco": "#A24E32",
+        "trilho": "#C9C6B8",
+        "veu": "#2A211B9E"
+      },
+      "escuro": {
+        "fundo": "#2A211B",
+        "superficie": "#362B23",
+        "texto": "#ECE3D2",
+        "textoSecundario": "#C9946B",
+        "filete": "#7A7F62",
+        "usuario": "#C9946B",
+        "textoSobreUsuario": "#2A211B",
+        "acao": "#A24E32",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#ECE3D2",
+        "status": "#C9946B",
+        "foco": "#C9946B",
+        "trilho": "#7A7F62"
+      }
+    },
+    "crepusculo": {
+      "nome": "Crepúsculo",
+      "oficial": false,
+      "origem": {
+        "base": "#1F1A2E",
+        "linha": "#6F6488",
+        "papel": "#ECE8F0",
+        "destaque": "#B9A6D6",
+        "acao": "#9B4F5C"
+      },
+      "claro": {
+        "fundo": "#ECE8F0",
+        "superficie": "#F6F3F8",
+        "texto": "#1F1A2E",
+        "filete": "#1F1A2E",
+        "usuario": "#B9A6D6",
+        "textoSobreUsuario": "#1F1A2E",
+        "acao": "#9B4F5C",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#ECE8F0",
+        "status": "#6F6488",
+        "foco": "#9B4F5C",
+        "trilho": "#C9C6B8",
+        "veu": "#1F1A2E9E"
+      },
+      "escuro": {
+        "fundo": "#1F1A2E",
+        "superficie": "#2A2440",
+        "texto": "#ECE8F0",
+        "textoSecundario": "#B9A6D6",
+        "filete": "#6F6488",
+        "usuario": "#B9A6D6",
+        "textoSobreUsuario": "#1F1A2E",
+        "acao": "#9B4F5C",
+        "textoSobreAcao": "#FFFFFF",
+        "iconeSobreAcao": "#ECE8F0",
+        "status": "#B9A6D6",
+        "foco": "#B9A6D6",
+        "trilho": "#6F6488"
+      }
+    }
+  },
+  "tipografia": {
+    "familias": {
+      "mono": "IBM Plex Mono",
+      "sans": "IBM Plex Sans"
+    },
+    "estilos": {
+      "tituloTela": {
+        "familia": "mono",
+        "peso": 600,
+        "tamanho": 16,
+        "espacamento": 1
+      },
+      "tituloDialogo": {
+        "familia": "sans",
+        "peso": 600,
+        "tamanho": 20
+      },
+      "tituloFolha": {
+        "familia": "mono",
+        "peso": 600,
+        "tamanho": 17
+      },
+      "corpo": {
+        "familia": "sans",
+        "peso": 400,
+        "tamanho": 16,
+        "alturaLinha": 1.45
+      },
+      "destaqueFicha": {
+        "familia": "sans",
+        "peso": 500,
+        "tamanho": 21,
+        "alturaLinha": 1.35
+      },
+      "comando": {
+        "familia": "mono",
+        "peso": 600,
+        "tamanho": 15
+      },
+      "meta": {
+        "familia": "mono",
+        "peso": 400,
+        "tamanho": 12,
+        "espacamento": 0.4,
+        "caixa": "alta"
+      },
+      "navegacao": {
+        "familia": "mono",
+        "peso": 400,
+        "pesoAtivo": 600,
+        "tamanho": 12,
+        "espacamento": 1,
+        "caixa": "alta"
+      },
+      "contador": {
+        "familia": "mono",
+        "peso": 500,
+        "tamanho": 34
+      },
+      "botao": {
+        "familia": "sans",
+        "peso": 600,
+        "tamanho": 16
+      }
+    },
+    "tamanhoMinimo": 12
+  },
+  "espacamento": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24
+  },
+  "forma": {
+    "cantos": 0,
+    "filete": 1,
+    "indicadorAtivo": 2,
+    "contornoFoco": 2,
+    "deslocamentoFoco": 2
+  },
+  "dimensoes": {
+    "alvoToqueMinimo": 44,
+    "botaoAltura": 48,
+    "campoAltura": 44,
+    "cabecalhoAltura": 56,
+    "navegacaoAltura": 64,
+    "margemTela": 16,
+    "iconeTraco": 1.75,
+    "icone": 20
+  },
+  "movimento": {
+    "respeitarMovimentoReduzido": true,
+    "barraBuscando": {
+      "duracaoMs": 1600,
+      "vaiEVolta": true
+    }
+  },
+  "privacidade": {
+    "remascararSegundos": 30,
+    "bloquearCaptura": true
+  }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Erros, conflito e comando inválido</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#172621}a:hover{color:#995F4C}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.ob{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:#172621;background:transparent;border:1px solid #172621;min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border-radius:0}
+.ib{width:44px;height:44px;flex-shrink:0;border:1px solid #172621;background:transparent;color:#172621;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.send{width:44px;height:44px;flex-shrink:0;border:0;background:#995F4C;color:#E8E5D8;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.in{flex-grow:1;min-width:0;height:44px;box-sizing:border-box;border:1px solid #172621;border-radius:0;padding:0 12px;font-size:16px;font-family:'IBM Plex Sans',sans-serif;background:#F3F1E8;color:#172621}
+.in::placeholder{color:#4a5d4f}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #995F4C;outline-offset:2px}
+.nv{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:#172621;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;border-top:2px solid transparent;margin-top:-1px}
+.nv[aria-current]{border-top-color:#995F4C;font-weight:600}
+.ub{align-self:flex-end;max-width:80%;background:#B8A47B;padding:10px 12px;font-size:16px;line-height:1.45}
+.ans{display:flex;flex-direction:column;gap:8px;max-width:94%;font-size:16px;line-height:1.45}
+.mini{background:#F3F1E8;border:1px solid #172621;padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E8E5D8; color: #172621; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid #172621">
+<span style="width: 30px; height: 30px; flex-shrink: 0; background: #172621; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="12" fill="#B8A47B"/><path d="M8 40h48" stroke="#E8E5D8" stroke-width="4" stroke-linecap="square" fill="none"/><g fill="#B8A47B" opacity="0.6"><rect x="21" y="46" width="22" height="4"/><rect x="27" y="53" width="10" height="4"/></g></svg></span>
+<span class="mono" style="font-size: 16px; font-weight: 600; letter-spacing: 1px; flex-grow: 1">solaris</span>
+<span class="meta" style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border: 1px solid #995F4C"></span>SEM VPN</span>
+</header>
+
+<div role="alert" style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #F3F1E8; border-bottom: 1px solid #172621">
+<svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="color: #995F4C"><path d="M12 3L2 21h20z"/><path d="M12 10v5M12 17.5v1"/></svg>
+<div style="flex-grow: 1; font-size: 14px; line-height: 1.35"><b style="font-weight: 600">Sem conexão com o servidor.</b> Nada foi salvo.</div>
+<button class="ob" style="font-size: 13px; padding: 0 10px">Reconectar</button>
+</div>
+
+<main style="flex-grow: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 16px; padding: 14px 16px">
+
+<div class="ub">Onde deixei a chave do carro?</div>
+<div class="ans">
+<div class="meta">SOLARIS · 08:15</div>
+<div>Encontrei <b style="font-weight: 600">duas fichas diferentes</b>:</div>
+<div class="mini"><span class="meta">Nº 7C1E · 13/10 21:40</span><span>Chave do carro na gaveta da cozinha.</span></div>
+<div class="mini"><span class="meta">Nº 61B0 · 12/10 08:10</span><span>Chave no bolso da jaqueta verde.</span></div>
+<div>A mais recente é a de ontem à noite. Qual delas vale?</div>
+</div>
+
+<div class="ub"><span class="mono" style="font-weight: 600">/add-temp dois</span> Chave na cozinha</div>
+<div class="ans">
+<div class="meta">SOLARIS · 08:16</div>
+<div><b style="font-weight: 600">Comando inválido.</b> Nada foi salvo. Os dias precisam ser um número:</div>
+<div class="mono" style="font-size: 15px; background: #F3F1E8; border: 1px solid #172621; padding: 8px 10px">/add-temp 2 Chave na cozinha</div>
+<a href="04-nova-memoria.html" class="ob" style="align-self: flex-start; text-decoration: none"><svg class="ln" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Usar o formulário</a>
+</div>
+
+<div style="align-self: flex-end; max-width: 80%; display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+<div style="border: 1px dashed #172621; padding: 10px 12px; font-size: 16px; line-height: 1.45"><span class="mono" style="font-weight: 600">/add</span> Vacina do gato em 20/11.</div>
+<div style="display: flex; align-items: center; gap: 10px"><span class="meta" style="color: #7a4434">NÃO ENVIADO</span><button class="ob" style="font-size: 13px; padding: 0 10px">Tentar de novo</button></div>
+</div>
+</main>
+
+<div style="flex-shrink: 0; border-top: 1px solid #172621; padding: 12px 16px; display: flex; gap: 8px">
+<a href="04-nova-memoria.html" class="ib" aria-label="Nova memória"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+<label for="ce" class="sr">Mensagem</label>
+<input id="ce" class="in" type="text" placeholder="Pergunte algo…">
+<button class="send" aria-label="Enviar"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg></button>
+</div>
+
+<nav aria-label="Navegação principal" style="height: 64px; flex-shrink: 0; display: flex; border-top: 1px solid #172621">
+<a href="02-chat.html" class="nv" aria-current="page"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>CHAT</a>
+<a href="05-memorias.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>MEMÓRIAS</a>
+<a href="08-ajustes.html" class="nv"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M16 7h4M4 17h2M10 17h10"/><rect x="12" y="5" width="4" height="4"/><rect x="6" y="15" width="4" height="4"/></svg>AJUSTES</a>
+</nav>
+
+</div>
+</body>
+</html>

@@ -28,6 +28,11 @@ Thumbs.db
 .env
 *.env.local
 
-# Original requirements doc — personal source material, not part of the
-# published repo (see README).
+# Original requirements doc (and later revisions of it) — personal source
+# material, not part of the published repo (see README).
 Zerkalo_Documento_de_Requisitos_v1.docx
+design/Requisitos_v1.1.docx
+design/solaris-handoff/docs/Requisitos_v1.1.docx
+
+# Redundant zip of design/solaris-handoff/ (same files, already tracked unzipped).
+design/solaris-handoff.zip
