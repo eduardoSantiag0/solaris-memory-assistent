@@ -1,161 +1,201 @@
 # solaris-memory-assistent
 
-Assistente pessoal de memória privada. Especificação completa em
-`Zerkalo_Documento_de_Requisitos_v1.docx`. Este README cobre o que já existe
-no repositório e as decisões de arquitetura tomadas além do documento.
+🇺🇸 English (this file) · 🇧🇷 [Português](README.pt-BR.md)
 
-## Decisões tomadas nesta fase
+A private personal memory assistant: register small everyday facts through
+explicit commands (`/add`, `/add-temp`) and retrieve them later by asking in
+natural language. It's not a note-taking app, a task manager, or a
+general-purpose assistant — its only job is to remember what you explicitly
+told it to, and to always show the record behind its answer. Built from a
+private Portuguese requirements document (product vision, functional/
+non-functional requirements, acceptance criteria) that isn't part of this
+repository — code comments and this README cite it as RF-xx/RNF-xx/CT-xx
+and section numbers for traceability.
 
-- **Frontend**: Compose Multiplatform (Kotlin), rodando em Android e Desktop
-  a partir da mesma base de código — o documento especifica Android nativo,
-  mas o uso real exige acesso também pelo desktop.
-- **Escopo**: backend M1 (Núcleo local, seção 14 do documento) primeiro,
-  depois uma primeira fatia de UI (navegação + tema + chat + memórias +
-  ajustes) ligada a ele.
-- **Criptografia de campo**: o backend vai rodar num servidor compartilhado
-  com outras duas pessoas, então o campo `content` das memórias é
-  criptografado com AES-256-GCM *na aplicação*, não só no disco — mesmo
-  alguém com acesso direto ao Postgres (psql, dump) só vê texto cifrado. Isso
-  decide a favor de um dos pontos abertos da seção 15 do documento
-  ("Criptografia por campo além de disco"). Consequência técnica: busca por
-  texto não pode mais acontecer em SQL (`LIKE` não funciona sobre texto
-  cifrado) — o motor de busca busca os candidatos ativos pelas colunas não
-  cifradas (status, datas) e filtra por texto já descriptografado na
-  aplicação. Isso é adequado para o volume pessoal de memórias que o
-  documento assume; não escalaria para milhões de linhas.
-- **Dark mode**: suportado desde esta primeira versão da UI, com tokens de
-  cor semânticos (fundo, superfície, texto, borda, destaque — ver
-  `theme/Color.kt`) e dois conjuntos de valores, mesmo padrão de theming do
-  tema Obsidian "retronotes" usado como referência
-  (`https://github.com/sr-campelo/retronotes`: variáveis tipo
-  `--background-primary`/`--text-normal` redefinidas por modo). A
-  alternância fica em Ajustes (seção 10.3 do documento) e troca o app
-  inteiro, testado rodando o app desktop de verdade.
+## Why "Solaris"?
 
-## O que existe
+The name comes from Andrei Tarkovsky's 1972 film *Solaris*, in which a
+sentient ocean reconstructs fragments of its visitors' memories — not as a
+faithful archive, but by recreating and transforming what it finds in the
+human mind.
 
-`backend/` — API Spring Boot (Java 17) cobrindo o M1 do roadmap:
+This project deliberately inverts that premise. Where the film's Solaris
+blurs memory and invention together, this system is built to keep that line
+sharp: every answer traces back to something the user explicitly wrote
+down, and the retrieval layer (RAG) is designed to distinguish a recorded
+memory from anything the model might generate (see RF-04/CT-05/CT-11 below
+— there's no synthesis step that could invent a fact, only retrieval). The
+name still fits, though, because that tension — between remembering,
+reconstructing, and understanding — is exactly what the product has to get
+right every time it answers a question.
 
-- `POST /api/v1/memories` — cria memória permanente (sem `ttlDays`) ou
-  temporária (com `ttlDays`, expira em `ttlDays × 24h` exatas).
-- `GET /api/v1/memories` — lista paginada, filtros `status` (active/expired/all),
-  `type` (permanent/temporary/all) e `q` (busca textual).
-- `GET /api/v1/memories/{id}`, `PATCH /api/v1/memories/{id}`, `DELETE /api/v1/memories/{id}`.
-- `POST /api/v1/chat/query` — busca em linguagem natural, híbrida (M3): texto
-  exato primeiro (RF-05 — nunca é substituído por similaridade, só
-  complementado), e só quando isso não encontra nada é que entra a busca
-  semântica via embeddings (pgvector + Ollama). A resposta é sempre o
-  conteúdo literal de uma memória encontrada, nunca texto gerado — não há
-  como "inventar" fatos porque não há síntese por LLM ainda, só recuperação.
-  Quando a resposta vem só da busca semântica, isso é sinalizado explicitamente
-  nos `warnings` (RF-13), nunca apresentado como se fosse um achado exato.
-- `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` — usuário único
-  (JWT + watermark de revogação em `auth_state`), com limitador de tentativas
-  de login.
+*Solaris — a memory that speaks back.*
+
+## Decisions made in this phase
+
+(beyond what the requirements document specifies)
+
+- **Frontend**: Compose Multiplatform (Kotlin), running on Android and
+  Desktop from the same codebase — the doc specifies native Android only,
+  but real usage needs desktop access too.
+- **Scope**: backend M1 (local core, doc section 14) first, then a first
+  UI slice (navigation + theme + chat + memories + settings) wired to it.
+- **Field-level encryption**: the backend runs on a server shared with two
+  other people, so the `content` field is encrypted with AES-256-GCM *in
+  the application*, not just on disk — even someone with direct Postgres
+  access (psql, a dump) only sees ciphertext. This resolves one of the
+  doc's own open points (section 15, "field encryption beyond disk").
+  Technical consequence: text search can no longer happen in SQL (`LIKE`
+  doesn't work on ciphertext) — the search engine fetches active
+  candidates by the non-encrypted columns and matches decrypted text in
+  the application layer. That's fine at the personal scale of memories the
+  doc assumes; it wouldn't scale to millions of rows.
+- **Dark mode**: supported from this first UI version, using semantic
+  color tokens (background, surface, text, border, accent — see
+  `theme/Color.kt`) with two value sets, the same theming pattern as the
+  Obsidian theme "retronotes" used as a visual reference
+  (`https://github.com/sr-campelo/retronotes`: variables like
+  `--background-primary`/`--text-normal` redefined per mode). The toggle
+  lives in Settings (doc section 10.3) and swaps the whole app, verified by
+  actually running the desktop app.
+- **Semantic search embeddings are stored unencrypted** in pgvector even
+  though they're derived from the same text `content` encrypts — accepted
+  tradeoff, since pgvector needs raw floats to compute distance; there's no
+  way to search an encrypted vector with it.
+
+## What's here
+
+`backend/` — Spring Boot API (Java 17) covering roadmap milestones M1 and M3:
+
+- `POST /api/v1/memories` — creates a permanent memory (no `ttlDays`) or a
+  temporary one (with `ttlDays`, expiring in exactly `ttlDays × 24h`).
+- `GET /api/v1/memories` — paginated list, filters `status`
+  (active/expired/all), `type` (permanent/temporary/all), and `q` (text
+  search).
+- `GET /api/v1/memories/{id}`, `PATCH /api/v1/memories/{id}`,
+  `DELETE /api/v1/memories/{id}`.
+- `POST /api/v1/chat/query` — natural-language search, hybrid (M3): exact
+  text first (RF-05 — never overridden by similarity, only supplemented),
+  and only when that finds nothing does semantic search kick in
+  (embeddings via pgvector + Ollama). The answer is always the literal
+  content of a memory that was found, never generated text — there's
+  nothing that could "invent" facts because there's no LLM synthesis step,
+  only retrieval. When an answer comes only from semantic search, that's
+  flagged explicitly in `warnings` (RF-13), never presented as if it were
+  an exact match.
+- `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` — single user (JWT
+  + a revocation watermark in `auth_state`), with login rate limiting.
 - `GET /api/v1/health`.
 
-Detalhes relevantes:
-- Expiração de memórias é sempre filtrada na consulta (`expiresAt is null or
-  expiresAt > now()`), nunca depende de um job de limpeza ter rodado (seção 5.1).
-- `clientRequestId` dá idempotência em `POST /memories` (reenvio após falha
-  de rede não duplica) e em `POST /chat/query` (cache curto em memória).
-- Expressões temporais simples em português (`ontem`, `hoje`, `semana
-  passada`) resolvem contra `eventAt`, nunca contra `createdAt` (RF-12).
-- **Embeddings (M3)**: ao criar/editar o texto de uma memória, um embedding
-  (Ollama, modelo `nomic-embed-text`, 768 dimensões) é gerado em background
-  (`EmbeddingExecutor`) e salvo numa coluna `vector` do Postgres (extensão
-  `pgvector`, índice HNSW) — nunca na mesma transação da escrita nem
-  bloqueando a resposta HTTP (RNF-07), e uma falha/indisponibilidade do
-  Ollama nunca impede o registro da memória (RF-10). Opcional via
-  `app.embeddings.enabled` (default `true` aqui; desliga se não houver
-  Ollama no ambiente). Limitação aceita conscientemente: o embedding é
-  derivado do mesmo texto que `content` criptografa, mas fica salvo *sem*
-  criptografia — pgvector precisa dos floats crus para calcular distância,
-  então não dá pra cifrar o vetor sem perder a capacidade de busca. Vaza
-  menos que texto puro, mas não é nada; ver código em
-  `backend/.../embedding/`.
+Relevant details:
+- Memory expiration is always filtered at query time (`expiresAt is null or
+  expiresAt > now()`), never depends on a cleanup job having run (section
+  5.1).
+- `clientRequestId` gives idempotency to `POST /memories` (a retry after a
+  network failure won't duplicate it) and to `POST /chat/query` (short
+  in-memory cache).
+- Simple Portuguese relative-date expressions (`ontem`/yesterday,
+  `hoje`/today, `semana passada`/last week) resolve against `eventAt`,
+  never against `createdAt` (RF-12).
+- **Embeddings (M3)**: when a memory's text is created/edited, an embedding
+  (Ollama, `nomic-embed-text` model, 768 dimensions) is generated in the
+  background (`EmbeddingExecutor`) and stored in a Postgres `vector` column
+  (the `pgvector` extension, HNSW index) — never in the same transaction as
+  the write, never blocking the HTTP response (RNF-07), and an
+  unavailable/failing Ollama never prevents the memory from being saved
+  (RF-10). Optional via `app.embeddings.enabled` (defaults to `true` here;
+  turn it off if there's no Ollama in the environment).
 
-`frontend/` — app Compose Multiplatform (Kotlin, Android + Desktop a partir
-do mesmo módulo `composeApp`):
+`frontend/` — Compose Multiplatform app (Kotlin; Android and Desktop from
+the same `composeApp` module):
 
-- Design system mínimo em `components/` (`PixelButton`, `RetroTextField`,
-  `RetroChatBubble`, `MemoryCard`) seguindo a estética "Colorful Retro
-  Macintosh Pixel UI" do documento (seção 11): contornos pretos grossos,
-  sombras rígidas deslocadas (nunca blur), sem cantos muito arredondados.
-  Paleta oficial da seção 11.2 em `theme/Color.kt`, com variante escura
-  derivada (ver decisão de dark mode acima).
-- Três telas (`screens/`): Chat (comandos `/add`, `/add-temp`, perguntas
-  em linguagem natural), Memórias (lista, prazo restante, exclusão),
-  Ajustes (tema, servidor, login). Navegação por abas inferior — layout
-  pensado para celular, mas sem exigir os três painéis simultâneos em
-  telas grandes (seção 11.3).
-- `network/ApiClient.kt` fala com o backend acima via Ktor.
-- `settings/AppSettings.kt` persiste tema, URL do servidor e sessão
-  (token) localmente — SharedPreferences no Android, `java.util.prefs` no
-  Desktop, mesma API via `multiplatform-settings`. Ao abrir o app com uma
-  sessão salva, ele tenta reusá-la antes de cair na tela de login.
-  Guardado em texto puro: protege contra "esqueci de persistir", não
-  contra o aparelho roubado — diferente da criptografia do backend, que
-  defende contra outras contas no mesmo servidor (uma ameaça mais
-  relevante aqui). Testado em `desktopTest` contra o caminho real de
-  produção (sem precisar automatizar clique na janela, que se mostrou
-  pouco confiável neste ambiente).
+- A minimal design system in `components/` (`PixelButton`, `RetroTextField`,
+  `RetroChatBubble`, `MemoryCard`) following the doc's "Colorful Retro
+  Macintosh Pixel UI" aesthetic (section 11): thick black outlines, rigid
+  offset shadows (never blur), no heavily rounded corners. The official
+  palette from section 11.2 lives in `theme/Color.kt`, with a derived dark
+  variant (see the dark mode decision above).
+- Three screens (`screens/`): Chat (`/add`, `/add-temp` commands, natural
+  language questions), Memories (list, time remaining, delete), Settings
+  (theme, server, login). Bottom tab navigation — laid out for mobile, but
+  without requiring all three panels at once on larger screens (section
+  11.3).
+- `network/ApiClient.kt` talks to the backend above via Ktor.
+- `settings/AppSettings.kt` persists theme, server URL, and session (token)
+  locally — SharedPreferences on Android, `java.util.prefs` on Desktop,
+  same API via `multiplatform-settings`. On launch with a saved session, it
+  tries to reuse it before falling back to the login screen. Stored in
+  plaintext: this protects against "forgot to persist it," not a stolen
+  device — a different, lower-priority threat than the backend's
+  encryption, which defends against other accounts on the same shared
+  server. Tested in `desktopTest` against the real production code path
+  (rather than automating a click on the window, which turned out to be
+  unreliable in this environment).
 
-## Rodando localmente
+`deploy/` — production stack for the target VM (`falcon.whatbox.ca`,
+confirmed to have a real public IP, not behind CGNAT): Postgres+pgvector,
+the API, and WireGuard via Docker Compose, with only the WireGuard UDP port
+ever exposed to the internet (RNF-01). See `deploy/README.md` for the
+step-by-step — **not yet verified against the actual VM**, since this
+session has no access to it.
+
+## Running locally
 
 ```bash
-docker compose up -d                 # Postgres (com pgvector) em localhost:5434
-ollama pull nomic-embed-text          # só se for usar busca semântica (M3)
+docker compose up -d                 # Postgres (with pgvector) on localhost:5434
+ollama pull nomic-embed-text          # only needed for semantic search (M3)
 cd backend
 mvn spring-boot:run
 ```
 
-Variáveis de ambiente (todas têm default de desenvolvimento em
-`application.yml` — **gere valores reais antes de qualquer uso além do seu
-próprio laptop**):
+Environment variables (all have development defaults in
+`application.yml` — **generate real values before any use beyond your own
+laptop**):
 
-| Variável | Para quê |
+| Variable | What for |
 |---|---|
-| `APP_ENCRYPTION_KEY` | chave AES-256 (base64) do campo `content`. Gerar com `python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"` |
-| `APP_JWT_SECRET` | segredo de assinatura dos tokens (≥32 bytes) |
-| `APP_USER` / `APP_PASSWORD_HASH` | usuário único; hash BCrypt da senha |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | conexão Postgres |
-| `APP_EMBEDDINGS_ENABLED` | `false` desliga a busca semântica (M3) por completo |
-| `APP_OLLAMA_URL` | onde está o Ollama (default `http://localhost:11434`) |
+| `APP_ENCRYPTION_KEY` | AES-256 key (base64) for the `content` field. Generate with `python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"` |
+| `APP_JWT_SECRET` | token signing secret (≥32 bytes) |
+| `APP_USER` / `APP_PASSWORD_HASH` | single user; BCrypt password hash |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Postgres connection |
+| `APP_EMBEDDINGS_ENABLED` | `false` turns semantic search (M3) off entirely |
+| `APP_OLLAMA_URL` | where Ollama is (default `http://localhost:11434`) |
 
-### Testes
+### Tests
 
 ```bash
 cd backend
 mvn test
 ```
 
-Usa Testcontainers (requer Docker rodando) para testar contra um Postgres
-real, incluindo os casos de aceite do documento (CT-01 a CT-11; CT-12 é de
-UI e CT-07 depende do cliente, não testáveis aqui) e uma verificação de que
-o conteúdo realmente está cifrado na coluna. O teste de busca semântica
-(`SemanticSearchIntegrationTest`) fala com o Ollama real da máquina e se
-pula sozinho quando ele não está acessível, em vez de falhar.
+Uses Testcontainers (requires Docker running) to test against a real
+Postgres, including the doc's acceptance scenarios (CT-01 through CT-11;
+CT-12 is a UI test and CT-07 depends on the client, neither testable here)
+and an explicit check that content really is encrypted in the column. The
+semantic search test (`SemanticSearchIntegrationTest`) talks to the real
+Ollama on the machine and skips itself when it isn't reachable, rather than
+failing.
 
-Nota: `reuseForks=false` no Surefire (uma JVM por classe de teste) — sem
-isso, a última classe a rodar numa suíte completa ocasionalmente não
-conseguia conectar no próprio container Postgres (connection refused logo
-após ele subir saudável), mesmo cada classe tendo seu container isolado;
-isolar o processo eliminou o problema.
+Note: Surefire runs with `reuseForks=false` (one JVM per test class) — without
+it, the last class in a full suite run would occasionally fail to connect to
+its own, otherwise-healthy, Postgres container (connection refused right
+after it started); isolating the process eliminated the problem.
 
 ### Frontend
 
 ```bash
 cd frontend
-./gradlew :composeApp:run          # app desktop
-./gradlew :composeApp:assembleDebug  # APK debug (precisa do Android SDK)
+./gradlew :composeApp:run            # desktop app
+./gradlew :composeApp:assembleDebug  # debug APK (needs the Android SDK)
 ```
 
-## Próximos passos (não implementados ainda)
+## Next steps (not implemented yet)
 
-- Fonte bitmap/pixel real para a tipografia (hoje usa fonte do sistema em
-  negrito como aproximação) e dithering decorativo (seção 11.1/11.6).
-- M2: WireGuard para acesso remoto — precisa de informação só o usuário tem
-  (topologia da rede, CGNAT, onde o backend vai rodar de fato).
-- M4: backups criptografados, restauração testada, exclusão física vs.
-  retenção de histórico (ponto aberto na seção 15 do documento).
+- Real bitmap/pixel font for the typography (currently a bold system font
+  as an approximation) and decorative dithering (sections 11.1/11.6).
+- Verify the `deploy/` WireGuard + Docker Compose stack against the real
+  VM (not yet accessible from this session).
+- Encrypted backups: `deploy/backup.sh` exists but retention policy
+  (delete for good vs. keep an archived history) is still an open decision
+  from the doc itself (section 15) — current default is a sane guess, not
+  that decision made for you.

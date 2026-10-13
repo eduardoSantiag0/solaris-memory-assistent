@@ -1,0 +1,88 @@
+# Production stack for the VM (doc PRE-01/PRE-02/RNF-01): Postgres and the
+# API are never published to the host's public interface — the only thing
+# reachable from the internet is the WireGuard UDP port. A phone connected
+# to the VPN reaches the API through the wireguard container, which bridges
+# into this same internal network.
+#
+# Deploy steps are in deploy/README.md. Copy deploy/.env.example to
+# deploy/.env and fill in real secrets before running `docker compose up -d`.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: solaris_memory
+      POSTGRES_USER: solaris
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    # No "ports:" — only reachable from other containers on this network.
+
+  backend:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: solaris_memory
+      DB_USER: solaris
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_USER: ${APP_USER}
+      APP_PASSWORD_HASH: ${APP_PASSWORD_HASH}
+      APP_EMBEDDINGS_ENABLED: ${APP_EMBEDDINGS_ENABLED:-false}
+      APP_OLLAMA_URL: ${APP_OLLAMA_URL:-http://host.docker.internal:11434}
+    networks:
+      internal:
+        # Pinned so the phone's WireGuard client can address it by a fixed
+        # IP (see deploy/README.md) instead of relying on Docker's DNS,
+        # which WireGuard peers outside the Docker network can't resolve.
+        ipv4_address: 172.28.0.3
+    # No "ports:" either — reached only through the WireGuard tunnel, never
+    # directly from the internet (RNF-01).
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Sao_Paulo
+      SERVERURL: ${WIREGUARD_SERVER_URL}
+      SERVERPORT: "51820"
+      PEERS: "1"
+      PEER_DNS: "auto"
+      # Phone only routes to this stack's internal network through the
+      # tunnel, not all of its internet traffic (RF: private remote access
+      # to the memory service, not "route everything through home").
+      ALLOWEDIPS: "10.13.13.0/24,172.28.0.0/24"
+      INTERNAL_SUBNET: "10.13.13.0/24"
+    volumes:
+      - wireguard-config:/config
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    ports:
+      - "51820:51820/udp"
+    networks:
+      internal:
+        ipv4_address: 172.28.0.2
+
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+
+volumes:
+  postgres-data:
+  wireguard-config:

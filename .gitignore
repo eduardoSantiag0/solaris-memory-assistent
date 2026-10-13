@@ -27,3 +27,7 @@ Thumbs.db
 # Secrets — never commit real keys/credentials
 .env
 *.env.local
+
+# Original requirements doc — personal source material, not part of the
+# published repo (see README).
+Zerkalo_Documento_de_Requisitos_v1.docx
