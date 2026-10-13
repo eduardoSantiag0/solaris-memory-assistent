@@ -97,7 +97,7 @@ class MemoryApiIntegrationTest extends AbstractIntegrationTest {
     @Test
     void duplicateSubmissionWithSameIdempotencyKeyCreatesOnlyOneMemory() {
         String clientRequestId = UUID.randomUUID().toString();
-        CreateMemoryRequest request = new CreateMemoryRequest("Peguei o remédio na farmácia.", null, null, clientRequestId);
+        CreateMemoryRequest request = new CreateMemoryRequest("Peguei o remédio na farmácia.", null, null, null, clientRequestId);
 
         ResponseEntity<MemoryResponse> first = restTemplate.exchange(
                 "/api/v1/memories", org.springframework.http.HttpMethod.POST, authEntity(restTemplate, request), MemoryResponse.class);
@@ -131,7 +131,7 @@ class MemoryApiIntegrationTest extends AbstractIntegrationTest {
     void editingAMemoryIsReflectedInSubsequentQueries() {
         MemoryResponse created = createMemory("A senha do wifi de casa é antiga123.", null);
 
-        UpdateMemoryRequest update = new UpdateMemoryRequest("A senha do wifi de casa é nova456.", null, false, null, false);
+        UpdateMemoryRequest update = new UpdateMemoryRequest("A senha do wifi de casa é nova456.", null, false, null, false, null);
         restTemplate.exchange("/api/v1/memories/" + created.id(), org.springframework.http.HttpMethod.PATCH,
                 authEntity(restTemplate, update), MemoryResponse.class);
 
@@ -167,7 +167,7 @@ class MemoryApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     private MemoryResponse createMemory(String content, Integer ttlDays) {
-        CreateMemoryRequest request = new CreateMemoryRequest(content, ttlDays, null, null);
+        CreateMemoryRequest request = new CreateMemoryRequest(content, ttlDays, null, null, null);
         ResponseEntity<MemoryResponse> response = restTemplate.exchange(
                 "/api/v1/memories", org.springframework.http.HttpMethod.POST, authEntity(restTemplate, request), MemoryResponse.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);

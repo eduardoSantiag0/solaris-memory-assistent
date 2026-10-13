@@ -15,9 +15,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.AppViewModel
-import dev.solaris.memory.components.PixelButton
-import dev.solaris.memory.components.RetroChatBubble
-import dev.solaris.memory.components.RetroTextField
+import dev.solaris.memory.ChatRole
+import dev.solaris.memory.components.AssistantMessageBody
+import dev.solaris.memory.components.AssistantMessageMeta
+import dev.solaris.memory.components.Composer
+import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.theme.LocalSolarisColors
 import kotlinx.coroutines.launch
 
@@ -37,38 +39,38 @@ fun ChatScreen(viewModel: AppViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.conversationBackground)
-            .padding(12.dp),
+            .background(colors.fundo)
+            .padding(16.dp),
     ) {
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(viewModel.chatHistory) { entry ->
-                RetroChatBubble(role = entry.role, text = entry.text, caption = entry.caption)
+                when (entry.role) {
+                    ChatRole.USER -> UserMessage(entry.text)
+                    ChatRole.ASSISTANT -> Column {
+                        AssistantMessageMeta(entry.horario)
+                        AssistantMessageBody(entry.text, modifier = Modifier.padding(top = 2.dp))
+                        if (entry.caption != null) {
+                            AssistantMessageMeta(entry.caption, modifier = Modifier.padding(top = 2.dp))
+                        }
+                    }
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            RetroTextField(
-                value = input,
-                onValueChange = { input = it },
-                placeholder = "/add, /add-temp <dias> ou pergunte algo...",
-                modifier = Modifier.weight(1f),
-            )
-            PixelButton(
-                text = "Enviar",
-                onClick = {
-                    val toSend = input
-                    input = ""
-                    scope.launch { viewModel.sendChatInput(toSend) }
-                },
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
+        Composer(
+            value = input,
+            onValueChange = { input = it },
+            onNovaMemoria = { /* TODO: NovaMemoriaSheet (tela 04) */ },
+            onEnviar = {
+                val toSend = input
+                input = ""
+                scope.launch { viewModel.sendChatInput(toSend) }
+            },
+            modifier = Modifier.padding(top = 12.dp),
+        )
     }
 }

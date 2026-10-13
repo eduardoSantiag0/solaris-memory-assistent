@@ -12,8 +12,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import dev.solaris.memory.components.PixelButton
+import dev.solaris.memory.components.AppHeader
+import dev.solaris.memory.components.BottomNav
+import dev.solaris.memory.components.NavTab
+import dev.solaris.memory.screens.AppearanceScreen
 import dev.solaris.memory.screens.ChatScreen
 import dev.solaris.memory.screens.MemoriesScreen
 import dev.solaris.memory.screens.SettingsScreen
@@ -22,69 +24,66 @@ import dev.solaris.memory.settings.createPlatformSettings
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisTheme
 
-private enum class Tab { CHAT, MEMORIES, SETTINGS }
+private enum class SubScreen { NONE, APARENCIA }
 
 /**
- * Three sections from doc 11.3 (Navegação, Conversação, Base de memórias)
- * adapted to a small screen as a single-pane-plus-bottom-tabs layout
- * (11.3: "não exigir a exibição simultânea dos três painéis"). Works the
- * same on desktop, just with more room around it — mobile is the target,
- * desktop only needs to not break.
+ * HANDOFF.md section 4: shell = AppHeader + conteúdo + BottomNav. Aparência
+ * (tela 09) não é uma 4ª aba, é alcançada a partir de Ajustes - continua
+ * mostrando AJUSTES como selecionado, com botão voltar no cabeçalho.
  */
 @Composable
 fun App() {
     val viewModel = remember { AppViewModel(AppSettings(createPlatformSettings())) }
-    var tab by rememberSaveable { mutableStateOf(Tab.SETTINGS) }
+    var tab by rememberSaveable { mutableStateOf(NavTab.CHAT) }
+    var sub by rememberSaveable { mutableStateOf(SubScreen.NONE) }
 
     LaunchedEffect(Unit) {
         viewModel.tryRestoreSession()
     }
 
-    SolarisTheme(darkMode = viewModel.darkMode) {
+    SolarisTheme(palette = viewModel.palette, mode = viewModel.themeMode) {
         val colors = LocalSolarisColors.current
 
         if (viewModel.isRestoringSession) {
-            Box(modifier = Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
-                Text("Carregando...", color = colors.onBackground)
+            Box(modifier = Modifier.fillMaxSize().background(colors.fundo), contentAlignment = Alignment.Center) {
+                Text("Carregando...", color = colors.texto)
             }
             return@SolarisTheme
         }
 
         if (!viewModel.isLoggedIn) {
-            SettingsScreen(viewModel)
+            Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
+                AppHeader(titulo = "solaris", vpnOk = false)
+                SettingsScreen(viewModel, onAbrirAparencia = {})
+            }
             return@SolarisTheme
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.weight(1f).fillMaxSize()) {
-                when (tab) {
-                    Tab.CHAT -> ChatScreen(viewModel)
-                    Tab.MEMORIES -> MemoriesScreen(viewModel)
-                    Tab.SETTINGS -> SettingsScreen(viewModel)
+        Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
+            val titulo = when {
+                sub == SubScreen.APARENCIA -> "Aparência"
+                tab == NavTab.CHAT -> "solaris"
+                tab == NavTab.MEMORIAS -> "Memórias"
+                else -> "Ajustes"
+            }
+            val contador = if (tab == NavTab.MEMORIAS && sub == SubScreen.NONE) viewModel.memories.size else null
+            AppHeader(
+                titulo = titulo,
+                contador = contador,
+                onVoltar = if (sub == SubScreen.APARENCIA) ({ sub = SubScreen.NONE }) else null,
+                vpnOk = true,
+            )
+
+            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+                when {
+                    sub == SubScreen.APARENCIA -> AppearanceScreen(viewModel)
+                    tab == NavTab.CHAT -> ChatScreen(viewModel)
+                    tab == NavTab.MEMORIAS -> MemoriesScreen(viewModel)
+                    tab == NavTab.AJUSTES -> SettingsScreen(viewModel, onAbrirAparencia = { sub = SubScreen.APARENCIA })
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.surfaceVariant)
-                    .padding(8.dp),
-            ) {
-                TabButton("Chat", tab == Tab.CHAT, Modifier.weight(1f)) { tab = Tab.CHAT }
-                TabButton("Memórias", tab == Tab.MEMORIES, Modifier.weight(1f).padding(horizontal = 6.dp)) { tab = Tab.MEMORIES }
-                TabButton("Ajustes", tab == Tab.SETTINGS, Modifier.weight(1f)) { tab = Tab.SETTINGS }
-            }
+            BottomNav(selected = tab, onSelect = { tab = it; sub = SubScreen.NONE })
         }
     }
-}
-
-@Composable
-private fun TabButton(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val colors = LocalSolarisColors.current
-    PixelButton(
-        text = label,
-        onClick = onClick,
-        backgroundColor = if (selected) colors.userBubble else colors.surface,
-        modifier = modifier,
-    )
 }

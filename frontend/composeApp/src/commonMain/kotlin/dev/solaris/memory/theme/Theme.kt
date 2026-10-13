@@ -1,71 +1,66 @@
 package dev.solaris.memory.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
-val LocalSolarisColors = compositionLocalOf { SolarisLightColors }
+val LocalSolarisColors = compositionLocalOf { solarisColors(Palette.ESTACAO, dark = false) }
+val LocalSolarisTextStyles = compositionLocalOf<SolarisTextStyles?> { null }
 
-/**
- * Square-ish corners, bold weights: the doc explicitly rules out
- * glassmorphism, blur and "cantos exageradamente arredondados" (11.1). A
- * real bitmap/pixel font is a follow-up (needs a font asset); bold system
- * fonts get the retro silhouette close enough for this first pass.
- */
+/** Sharp corners everywhere, including dialogs and sheets (design-tokens.json forma.cantos = 0). */
 private val SolarisShapes = androidx.compose.material3.Shapes(
     extraSmall = RoundedCornerShape(0.dp),
     small = RoundedCornerShape(0.dp),
-    medium = RoundedCornerShape(2.dp),
-    large = RoundedCornerShape(2.dp),
-    extraLarge = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(0.dp),
+    large = RoundedCornerShape(0.dp),
+    extraLarge = RoundedCornerShape(0.dp),
 )
 
-private val SolarisTypography = Typography(
-    titleLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp, letterSpacing = 0.5.sp),
-    titleMedium = TextStyle(fontWeight = FontWeight.Bold, fontSize = 16.sp),
-    bodyLarge = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontWeight = FontWeight.Normal, fontSize = 14.sp),
-    labelLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.5.sp),
-)
+enum class ThemeMode { CLARO, ESCURO, SISTEMA }
 
 @Composable
-fun SolarisTheme(darkMode: Boolean, content: @Composable () -> Unit) {
-    val colors = if (darkMode) SolarisDarkColors else SolarisLightColors
-    val materialColors = if (darkMode) {
-        androidx.compose.material3.darkColorScheme(
-            primary = colors.accentPrimary,
-            secondary = colors.accentSecondary,
-            background = colors.background,
-            surface = colors.surface,
-            onBackground = colors.onBackground,
-            onSurface = colors.onSurface,
-            error = colors.error,
+fun SolarisTheme(palette: Palette, mode: ThemeMode, content: @Composable () -> Unit) {
+    val dark = when (mode) {
+        ThemeMode.CLARO -> false
+        ThemeMode.ESCURO -> true
+        ThemeMode.SISTEMA -> isSystemInDarkTheme()
+    }
+    val colors = solarisColors(palette, dark)
+    val textStyles = solarisTextStyles()
+
+    val materialColors = if (dark) {
+        darkColorScheme(
+            primary = colors.acao, secondary = colors.usuario,
+            background = colors.fundo, surface = colors.superficie,
+            onBackground = colors.texto, onSurface = colors.texto,
+            error = colors.acao,
         )
     } else {
-        androidx.compose.material3.lightColorScheme(
-            primary = colors.accentPrimary,
-            secondary = colors.accentSecondary,
-            background = colors.background,
-            surface = colors.surface,
-            onBackground = colors.onBackground,
-            onSurface = colors.onSurface,
-            error = colors.error,
+        lightColorScheme(
+            primary = colors.acao, secondary = colors.usuario,
+            background = colors.fundo, surface = colors.superficie,
+            onBackground = colors.texto, onSurface = colors.texto,
+            error = colors.acao,
         )
     }
 
-    CompositionLocalProvider(LocalSolarisColors provides colors) {
+    CompositionLocalProvider(LocalSolarisColors provides colors, LocalSolarisTextStyles provides textStyles) {
         MaterialTheme(
             colorScheme = materialColors,
-            typography = SolarisTypography,
+            typography = Typography(bodyLarge = textStyles.corpo),
             shapes = SolarisShapes,
             content = content,
         )
     }
 }
+
+/** Shorthand so screens don't repeat `LocalSolarisTextStyles.current!!` everywhere. */
+val solarisText: SolarisTextStyles
+    @Composable get() = LocalSolarisTextStyles.current ?: error("SolarisTheme not applied")

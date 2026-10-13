@@ -85,6 +85,7 @@ public class MemoryService {
                 expiresAt,
                 blankToNull(request.clientRequestId())
         );
+        memory.setSensitivity(request.sensitivity());
         Memory saved = repository.save(memory);
         scheduleEmbedding(saved.getId(), request.content());
         return new IdempotentResult(saved, true);
@@ -116,6 +117,9 @@ public class MemoryService {
         }
 
         memory.applyUpdate(request.content(), newEventAt, newExpiresAt, now);
+        if (request.sensitivity() != null) {
+            memory.setSensitivity(request.sensitivity());
+        }
 
         // Re-embed only when the text itself changed (RF-09: edits must
         // update the index) - touching only dates/ttl doesn't need a new vector.

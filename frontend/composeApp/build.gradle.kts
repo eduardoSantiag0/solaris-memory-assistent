@@ -56,6 +56,10 @@ kotlin {
     }
 }
 
+compose.resources {
+    packageOfResClass = "dev.solaris.memory.resources"
+}
+
 android {
     namespace = "dev.solaris.memory"
     compileSdk = 35

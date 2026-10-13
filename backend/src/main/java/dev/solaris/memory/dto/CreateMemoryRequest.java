@@ -1,5 +1,6 @@
 package dev.solaris.memory.dto;
 
+import dev.solaris.memory.domain.Sensitivity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
@@ -18,6 +19,8 @@ public record CreateMemoryRequest(
         Integer ttlDays,
 
         Instant eventAt,
+
+        Sensitivity sensitivity,
 
         String clientRequestId
 ) {

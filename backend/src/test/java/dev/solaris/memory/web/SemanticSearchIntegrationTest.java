@@ -62,7 +62,7 @@ class SemanticSearchIntegrationTest extends AbstractIntegrationTest {
     }
 
     private MemoryResponse createMemory(String content) {
-        CreateMemoryRequest request = new CreateMemoryRequest(content, null, null, UUID.randomUUID().toString());
+        CreateMemoryRequest request = new CreateMemoryRequest(content, null, null, null, UUID.randomUUID().toString());
         ResponseEntity<MemoryResponse> response = restTemplate.exchange(
                 "/api/v1/memories", HttpMethod.POST, authEntity(restTemplate, request), MemoryResponse.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);

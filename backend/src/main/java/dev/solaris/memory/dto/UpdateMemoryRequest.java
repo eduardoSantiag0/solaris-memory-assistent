@@ -1,5 +1,6 @@
 package dev.solaris.memory.dto;
 
+import dev.solaris.memory.domain.Sensitivity;
 import jakarta.validation.constraints.Positive;
 
 import java.time.Instant;
@@ -23,6 +24,8 @@ public record UpdateMemoryRequest(
 
         Instant eventAt,
 
-        boolean clearEventAt
+        boolean clearEventAt,
+
+        Sensitivity sensitivity
 ) {
 }

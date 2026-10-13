@@ -16,17 +16,27 @@ class AppSettingsDesktopTest {
     @AfterTest
     fun resetToDefaults() {
         val settings = AppSettings(createPlatformSettings())
-        settings.darkMode = false
+        settings.themeMode = "sistema"
+        settings.paletteId = "estacao"
         settings.token = null
     }
 
     @Test
-    fun darkModePreferencePersistsAcrossInstances() {
+    fun themeModePreferencePersistsAcrossInstances() {
         val first = AppSettings(createPlatformSettings())
-        first.darkMode = true
+        first.themeMode = "escuro"
 
         val second = AppSettings(createPlatformSettings())
-        assertEquals(true, second.darkMode)
+        assertEquals("escuro", second.themeMode)
+    }
+
+    @Test
+    fun palettePreferencePersistsAcrossInstances() {
+        val first = AppSettings(createPlatformSettings())
+        first.paletteId = "gelo"
+
+        val second = AppSettings(createPlatformSettings())
+        assertEquals("gelo", second.paletteId)
     }
 
     @Test

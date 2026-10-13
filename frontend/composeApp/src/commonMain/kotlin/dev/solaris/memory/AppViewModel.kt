@@ -3,15 +3,26 @@ package dev.solaris.memory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import dev.solaris.memory.components.ChatRole
 import dev.solaris.memory.network.ApiClient
 import dev.solaris.memory.network.ChatQueryResponse
 import dev.solaris.memory.network.CreateMemoryRequest
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.network.randomRequestId
 import dev.solaris.memory.settings.AppSettings
+import dev.solaris.memory.theme.Palette
+import dev.solaris.memory.theme.ThemeMode
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
-data class ChatEntry(val role: ChatRole, val text: String, val caption: String? = null)
+enum class ChatRole { USER, ASSISTANT }
+
+data class ChatEntry(val role: ChatRole, val text: String, val horario: String, val caption: String? = null)
+
+private fun agora(): String {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    return "${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}"
+}
 
 /**
  * Deliberately not a DI-framework ViewModel - this is still an early UI
@@ -23,7 +34,9 @@ data class ChatEntry(val role: ChatRole, val text: String, val caption: String? 
  * and keeps them from going stale.
  */
 class AppViewModel(private val settings: AppSettings) {
-    var darkMode by mutableStateOf(settings.darkMode)
+    var themeMode by mutableStateOf(ThemeMode.valueOf(settings.themeMode.uppercase()))
+        private set
+    var palette by mutableStateOf(Palette.entries.first { it.id == settings.paletteId })
         private set
     var serverUrl by mutableStateOf(settings.serverUrl)
     var isLoggedIn by mutableStateOf(false)
@@ -36,9 +49,14 @@ class AppViewModel(private val settings: AppSettings) {
 
     val api = ApiClient(serverUrl)
 
-    fun updateDarkMode(value: Boolean) {
-        darkMode = value
-        settings.darkMode = value
+    fun updateThemeMode(value: ThemeMode) {
+        themeMode = value
+        settings.themeMode = value.name.lowercase()
+    }
+
+    fun updatePalette(value: Palette) {
+        palette = value
+        settings.paletteId = value.id
     }
 
     fun applyServerUrl() {
@@ -108,7 +126,7 @@ class AppViewModel(private val settings: AppSettings) {
         val input = rawInput.trim()
         if (input.isEmpty()) return
 
-        chatHistory = chatHistory + ChatEntry(ChatRole.USER, input)
+        chatHistory = chatHistory + ChatEntry(ChatRole.USER, input, agora())
 
         try {
             when {
@@ -119,43 +137,39 @@ class AppViewModel(private val settings: AppSettings) {
                     val text = parts.getOrNull(1)?.trim().orEmpty()
                     if (days == null || days <= 0 || text.isEmpty()) {
                         chatHistory = chatHistory + ChatEntry(
-                            ChatRole.ASSISTANT,
-                            "Uso: /add-temp <dias> <texto>. Exemplo: /add-temp 2 Deixei a chave na cozinha.",
+                            ChatRole.ASSISTANT, "Uso: /add-temp <dias> <texto>. Exemplo: /add-temp 2 Deixei a chave na cozinha.", agora(),
                         )
                         return
                     }
                     val created = api.createMemory(CreateMemoryRequest(content = text, ttlDays = days))
                     refreshMemories()
                     chatHistory = chatHistory + ChatEntry(
-                        ChatRole.ASSISTANT,
-                        "Memoria temporaria criada.",
-                        caption = "valida até ${created.expiresAt}",
+                        ChatRole.ASSISTANT, "Memória temporária criada.", agora(), caption = "válida até ${created.expiresAt}",
                     )
                 }
                 input.startsWith("/add") -> {
                     val text = input.removePrefix("/add").trim()
                     if (text.isEmpty()) {
                         chatHistory = chatHistory + ChatEntry(
-                            ChatRole.ASSISTANT,
-                            "Uso: /add <texto>. Exemplo: /add Meu documento fica na gaveta azul.",
+                            ChatRole.ASSISTANT, "Uso: /add <texto>. Exemplo: /add Meu documento fica na gaveta azul.", agora(),
                         )
                         return
                     }
                     api.createMemory(CreateMemoryRequest(content = text))
                     refreshMemories()
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memoria permanente criada.")
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente criada.", agora())
                 }
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())
                     val caption = response.sources.firstOrNull()?.let { "fonte: ${it.date}" }
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, caption)
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), caption)
                     response.warnings.forEach { warning ->
-                        chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "aviso: $warning")
+                        chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "aviso: $warning", agora())
                     }
                 }
             }
         } catch (e: Exception) {
-            chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Erro: ${e.message ?: "falha de comunicacao com o servidor"}")
+            chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Erro: ${e.message ?: "falha de comunicação com o servidor"}", agora())
         }
     }
 }

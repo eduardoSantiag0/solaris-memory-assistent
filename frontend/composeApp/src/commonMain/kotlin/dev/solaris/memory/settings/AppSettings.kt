@@ -20,16 +20,23 @@ import com.russhwolf.settings.Settings
 class AppSettings(private val settings: Settings) {
 
     companion object {
-        private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_PALETTE = "palette_id"
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_TOKEN = "auth_token"
 
         private const val DEFAULT_SERVER_URL = "http://localhost:8080"
     }
 
-    var darkMode: Boolean
-        get() = settings.getBoolean(KEY_DARK_MODE, false)
-        set(value) = settings.putBoolean(KEY_DARK_MODE, value)
+    /** "claro" | "escuro" | "sistema" — design-tokens.json temaPadrao. */
+    var themeMode: String
+        get() = settings.getString(KEY_THEME_MODE, "sistema")
+        set(value) = settings.putString(KEY_THEME_MODE, value)
+
+    /** One of Palette.id — design-tokens.json paletaPadrao. */
+    var paletteId: String
+        get() = settings.getString(KEY_PALETTE, "estacao")
+        set(value) = settings.putString(KEY_PALETTE, value)
 
     var serverUrl: String
         get() = settings.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL)
