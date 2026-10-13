@@ -21,11 +21,7 @@ import kotlinx.serialization.json.Json
 /** Thrown with the server's own message so screens can show it directly instead of a generic failure. */
 class ApiException(message: String) : Exception(message)
 
-/**
- * Talks to the solaris-memory-assistent backend (see ../../../backend). No
- * token persistence yet (v1 keeps it in memory only — added when the
- * Ajustes/session-management screen grows past this first slice).
- */
+/** Talks to the solaris-memory-assistent backend (see ../../../backend). */
 class ApiClient(private var baseUrl: String) {
 
     private var token: String? = null
@@ -41,6 +37,13 @@ class ApiClient(private var baseUrl: String) {
     }
 
     fun isAuthenticated(): Boolean = token != null
+
+    /** Reapplies a token persisted from a previous session (dev/solaris/memory/settings) without re-authenticating. */
+    fun restoreToken(savedToken: String) {
+        token = savedToken
+    }
+
+    fun currentToken(): String? = token
 
     suspend fun login(username: String, password: String) {
         val response = client.post("$baseUrl/api/v1/auth/login") {

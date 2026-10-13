@@ -37,6 +37,7 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+            implementation("com.russhwolf:multiplatform-settings:1.1.1")
         }
         androidMain.dependencies {
             implementation(compose.preview)
@@ -47,6 +48,10 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation("io.ktor:ktor-client-cio:$ktorVersion")
+        }
+        val desktopTest by getting
+        desktopTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

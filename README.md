@@ -73,9 +73,17 @@ do mesmo módulo `composeApp`):
   Ajustes (tema, servidor, login). Navegação por abas inferior — layout
   pensado para celular, mas sem exigir os três painéis simultâneos em
   telas grandes (seção 11.3).
-- `network/ApiClient.kt` fala com o backend acima via Ktor; sessão e
-  preferências ainda só em memória (sem persistência local — próximo
-  passo).
+- `network/ApiClient.kt` fala com o backend acima via Ktor.
+- `settings/AppSettings.kt` persiste tema, URL do servidor e sessão
+  (token) localmente — SharedPreferences no Android, `java.util.prefs` no
+  Desktop, mesma API via `multiplatform-settings`. Ao abrir o app com uma
+  sessão salva, ele tenta reusá-la antes de cair na tela de login.
+  Guardado em texto puro: protege contra "esqueci de persistir", não
+  contra o aparelho roubado — diferente da criptografia do backend, que
+  defende contra outras contas no mesmo servidor (uma ameaça mais
+  relevante aqui). Testado em `desktopTest` contra o caminho real de
+  produção (sem precisar automatizar clique na janela, que se mostrou
+  pouco confiável neste ambiente).
 
 ## Rodando localmente
 
@@ -118,8 +126,6 @@ cd frontend
 
 ## Próximos passos (não implementados ainda)
 
-- Persistir sessão (token) e preferência de tema localmente (DataStore no
-  Android, arquivo de prefs no desktop) — hoje tudo reseta ao fechar o app.
 - Fonte bitmap/pixel real para a tipografia (hoje usa fonte do sistema em
   negrito como aproximação) e dithering decorativo (seção 11.1/11.6).
 - M2: WireGuard para acesso remoto.

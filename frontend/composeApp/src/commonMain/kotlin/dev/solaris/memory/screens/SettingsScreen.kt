@@ -1,11 +1,7 @@
 package dev.solaris.memory.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,12 +40,12 @@ fun SettingsScreen(viewModel: AppViewModel) {
         Row {
             PixelButton(
                 text = "Claro",
-                onClick = { viewModel.darkMode = false },
+                onClick = { viewModel.updateDarkMode(false) },
                 backgroundColor = if (!viewModel.darkMode) colors.accentPrimary else colors.surfaceVariant,
             )
             PixelButton(
                 text = "Escuro",
-                onClick = { viewModel.darkMode = true },
+                onClick = { viewModel.updateDarkMode(true) },
                 backgroundColor = if (viewModel.darkMode) colors.accentPrimary else colors.surfaceVariant,
                 modifier = Modifier.padding(start = 12.dp),
             )
@@ -61,12 +57,21 @@ fun SettingsScreen(viewModel: AppViewModel) {
             color = colors.onBackground,
             modifier = Modifier.padding(top = 28.dp, bottom = 8.dp),
         )
-        RetroTextField(
-            value = viewModel.serverUrl,
-            onValueChange = { viewModel.serverUrl = it },
-            placeholder = "http://servidor:8080",
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Row {
+            RetroTextField(
+                value = viewModel.serverUrl,
+                onValueChange = { viewModel.serverUrl = it },
+                placeholder = "http://servidor:8080",
+                modifier = Modifier.weight(1f),
+            )
+            if (viewModel.isLoggedIn) {
+                PixelButton(
+                    text = "Aplicar",
+                    onClick = { viewModel.applyServerUrl() },
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
 
         if (!viewModel.isLoggedIn) {
             var username by remember { mutableStateOf("") }

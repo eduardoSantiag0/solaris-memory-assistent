@@ -2,18 +2,23 @@ package dev.solaris.memory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.components.PixelButton
 import dev.solaris.memory.screens.ChatScreen
 import dev.solaris.memory.screens.MemoriesScreen
 import dev.solaris.memory.screens.SettingsScreen
+import dev.solaris.memory.settings.AppSettings
+import dev.solaris.memory.settings.createPlatformSettings
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisTheme
 
@@ -28,11 +33,22 @@ private enum class Tab { CHAT, MEMORIES, SETTINGS }
  */
 @Composable
 fun App() {
-    val viewModel = remember { AppViewModel() }
+    val viewModel = remember { AppViewModel(AppSettings(createPlatformSettings())) }
     var tab by rememberSaveable { mutableStateOf(Tab.SETTINGS) }
+
+    LaunchedEffect(Unit) {
+        viewModel.tryRestoreSession()
+    }
 
     SolarisTheme(darkMode = viewModel.darkMode) {
         val colors = LocalSolarisColors.current
+
+        if (viewModel.isRestoringSession) {
+            Box(modifier = Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
+                Text("Carregando...", color = colors.onBackground)
+            }
+            return@SolarisTheme
+        }
 
         if (!viewModel.isLoggedIn) {
             SettingsScreen(viewModel)

@@ -9,20 +9,26 @@ import dev.solaris.memory.network.ChatQueryResponse
 import dev.solaris.memory.network.CreateMemoryRequest
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.network.randomRequestId
+import dev.solaris.memory.settings.AppSettings
 
 data class ChatEntry(val role: ChatRole, val text: String, val caption: String? = null)
 
 /**
- * Deliberately not a persisted/DI-framework ViewModel yet - this is the
- * first UI slice. Dark mode preference and server URL are in-memory only
- * for now; wiring them to platform-local storage (DataStore/Preferences on
- * Android, a prefs file on Desktop) is a follow-up, not a v1 requirement.
+ * Deliberately not a DI-framework ViewModel - this is still an early UI
+ * slice. [AppSettings] persists dark mode, server URL and the session
+ * token to disk (SharedPreferences on Android, java.util.prefs on
+ * Desktop) so they survive closing the app; everything else here
+ * (chat history, the memories list) is still in-memory only by design -
+ * reloading them from the server on each launch is simpler than caching
+ * and keeps them from going stale.
  */
-class AppViewModel {
-    var darkMode by mutableStateOf(false)
-    var serverUrl by mutableStateOf("http://localhost:8080")
+class AppViewModel(private val settings: AppSettings) {
+    var darkMode by mutableStateOf(settings.darkMode)
+        private set
+    var serverUrl by mutableStateOf(settings.serverUrl)
     var isLoggedIn by mutableStateOf(false)
     var loginError by mutableStateOf<String?>(null)
+    var isRestoringSession by mutableStateOf(settings.token != null)
 
     var chatHistory by mutableStateOf<List<ChatEntry>>(emptyList())
     var memories by mutableStateOf<List<MemoryResponse>>(emptyList())
@@ -30,8 +36,32 @@ class AppViewModel {
 
     val api = ApiClient(serverUrl)
 
+    fun updateDarkMode(value: Boolean) {
+        darkMode = value
+        settings.darkMode = value
+    }
+
     fun applyServerUrl() {
         api.setBaseUrl(serverUrl)
+        settings.serverUrl = serverUrl
+    }
+
+    /** Called once at startup: if a session was saved, try it before falling back to the login screen. */
+    suspend fun tryRestoreSession() {
+        val savedToken = settings.token ?: return
+        isRestoringSession = true
+        try {
+            applyServerUrl()
+            api.restoreToken(savedToken)
+            memories = api.listMemories(status = "all").items
+            isLoggedIn = true
+        } catch (e: Exception) {
+            // A saved token that no longer works (expired, revoked, server
+            // changed) should fall back to login, not sit on a broken session.
+            settings.token = null
+        } finally {
+            isRestoringSession = false
+        }
     }
 
     suspend fun login(username: String, password: String) {
@@ -39,6 +69,7 @@ class AppViewModel {
         try {
             applyServerUrl()
             api.login(username, password)
+            settings.token = api.currentToken()
             isLoggedIn = true
             refreshMemories()
         } catch (e: Exception) {
@@ -48,6 +79,7 @@ class AppViewModel {
 
     fun logout() {
         api.logout()
+        settings.token = null
         isLoggedIn = false
         chatHistory = emptyList()
         memories = emptyList()
