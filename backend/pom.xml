@@ -40,10 +40,11 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- Compile scope, not runtime: EmbeddingRepository binds org.postgresql.util
+         types directly via com.pgvector.PGvector. -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -52,6 +53,16 @@
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <!-- Plain-JDBC pgvector binding (PGvector implements java.sql.SQLData) —
+         deliberately not hibernate-vector: that module needs Hibernate 6.6+,
+         and this project is on the Hibernate 6.5.x Spring Boot 3.3 manages.
+         Embeddings are written/read via JdbcTemplate, not JPA, so there's no
+         ORM-version coupling either way. -->
+    <dependency>
+      <groupId>com.pgvector</groupId>
+      <artifactId>pgvector</artifactId>
+      <version>0.1.6</version>
     </dependency>
 
     <dependency>
@@ -119,6 +130,17 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Fresh JVM per test class: several classes each spin up their own
+               Testcontainers Postgres, and a reused JVM was intermittently
+               leaving one of them unable to connect (connection refused on an
+               otherwise-healthy container) when run back-to-back. -->
+          <reuseForks>false</reuseForks>
+        </configuration>
       </plugin>
     </plugins>
   </build>

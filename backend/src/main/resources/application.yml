@@ -40,6 +40,16 @@ app:
   idempotency:
     chat-cache-max-entries: 500
     chat-cache-ttl-seconds: 120
+  embeddings:
+    # Semantic search (doc section 6/section 14 M3) — optional by design:
+    # "pgvector/Ollama podem ser habilitados quando a recuperação semântica
+    # melhorar a experiência". Disable if no Ollama is reachable; the app
+    # falls back to M1's plain text search either way (RF-05 never lets
+    # vector similarity override an exact/text match regardless of this flag).
+    enabled: ${APP_EMBEDDINGS_ENABLED:true}
+    ollama-base-url: ${APP_OLLAMA_URL:http://localhost:11434}
+    model: ${APP_EMBEDDINGS_MODEL:nomic-embed-text}
+    dimensions: 768
 
 logging:
   level:

@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 is a stock Postgres 16 image with the pgvector
+    # extension built in (CREATE EXTENSION vector; still required) — same
+    # base image otherwise, swapped so M3 (semantic search) has it available.
+    image: pgvector/pgvector:pg16
     container_name: solaris-memory-postgres
     environment:
       POSTGRES_DB: solaris_memory

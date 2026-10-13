@@ -41,11 +41,14 @@ no repositório e as decisões de arquitetura tomadas além do documento.
 - `GET /api/v1/memories` — lista paginada, filtros `status` (active/expired/all),
   `type` (permanent/temporary/all) e `q` (busca textual).
 - `GET /api/v1/memories/{id}`, `PATCH /api/v1/memories/{id}`, `DELETE /api/v1/memories/{id}`.
-- `POST /api/v1/chat/query` — busca em linguagem natural. M1 não tem
-  embeddings nem LLM (o documento permite começar só com Postgres e busca
-  textual, seção 6); a resposta é sempre o conteúdo literal de uma memória
-  encontrada, nunca texto gerado — não há como "inventar" fatos porque não
-  há geração nenhuma ainda.
+- `POST /api/v1/chat/query` — busca em linguagem natural, híbrida (M3): texto
+  exato primeiro (RF-05 — nunca é substituído por similaridade, só
+  complementado), e só quando isso não encontra nada é que entra a busca
+  semântica via embeddings (pgvector + Ollama). A resposta é sempre o
+  conteúdo literal de uma memória encontrada, nunca texto gerado — não há
+  como "inventar" fatos porque não há síntese por LLM ainda, só recuperação.
+  Quando a resposta vem só da busca semântica, isso é sinalizado explicitamente
+  nos `warnings` (RF-13), nunca apresentado como se fosse um achado exato.
 - `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` — usuário único
   (JWT + watermark de revogação em `auth_state`), com limitador de tentativas
   de login.
@@ -58,6 +61,19 @@ Detalhes relevantes:
   de rede não duplica) e em `POST /chat/query` (cache curto em memória).
 - Expressões temporais simples em português (`ontem`, `hoje`, `semana
   passada`) resolvem contra `eventAt`, nunca contra `createdAt` (RF-12).
+- **Embeddings (M3)**: ao criar/editar o texto de uma memória, um embedding
+  (Ollama, modelo `nomic-embed-text`, 768 dimensões) é gerado em background
+  (`EmbeddingExecutor`) e salvo numa coluna `vector` do Postgres (extensão
+  `pgvector`, índice HNSW) — nunca na mesma transação da escrita nem
+  bloqueando a resposta HTTP (RNF-07), e uma falha/indisponibilidade do
+  Ollama nunca impede o registro da memória (RF-10). Opcional via
+  `app.embeddings.enabled` (default `true` aqui; desliga se não houver
+  Ollama no ambiente). Limitação aceita conscientemente: o embedding é
+  derivado do mesmo texto que `content` criptografa, mas fica salvo *sem*
+  criptografia — pgvector precisa dos floats crus para calcular distância,
+  então não dá pra cifrar o vetor sem perder a capacidade de busca. Vaza
+  menos que texto puro, mas não é nada; ver código em
+  `backend/.../embedding/`.
 
 `frontend/` — app Compose Multiplatform (Kotlin, Android + Desktop a partir
 do mesmo módulo `composeApp`):
@@ -88,7 +104,8 @@ do mesmo módulo `composeApp`):
 ## Rodando localmente
 
 ```bash
-docker compose up -d                 # Postgres em localhost:5434
+docker compose up -d                 # Postgres (com pgvector) em localhost:5434
+ollama pull nomic-embed-text          # só se for usar busca semântica (M3)
 cd backend
 mvn spring-boot:run
 ```
@@ -103,6 +120,8 @@ próprio laptop**):
 | `APP_JWT_SECRET` | segredo de assinatura dos tokens (≥32 bytes) |
 | `APP_USER` / `APP_PASSWORD_HASH` | usuário único; hash BCrypt da senha |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | conexão Postgres |
+| `APP_EMBEDDINGS_ENABLED` | `false` desliga a busca semântica (M3) por completo |
+| `APP_OLLAMA_URL` | onde está o Ollama (default `http://localhost:11434`) |
 
 ### Testes
 
@@ -114,7 +133,15 @@ mvn test
 Usa Testcontainers (requer Docker rodando) para testar contra um Postgres
 real, incluindo os casos de aceite do documento (CT-01 a CT-11; CT-12 é de
 UI e CT-07 depende do cliente, não testáveis aqui) e uma verificação de que
-o conteúdo realmente está cifrado na coluna.
+o conteúdo realmente está cifrado na coluna. O teste de busca semântica
+(`SemanticSearchIntegrationTest`) fala com o Ollama real da máquina e se
+pula sozinho quando ele não está acessível, em vez de falhar.
+
+Nota: `reuseForks=false` no Surefire (uma JVM por classe de teste) — sem
+isso, a última classe a rodar numa suíte completa ocasionalmente não
+conseguia conectar no próprio container Postgres (connection refused logo
+após ele subir saudável), mesmo cada classe tendo seu container isolado;
+isolar o processo eliminou o problema.
 
 ### Frontend
 
@@ -128,7 +155,7 @@ cd frontend
 
 - Fonte bitmap/pixel real para a tipografia (hoje usa fonte do sistema em
   negrito como aproximação) e dithering decorativo (seção 11.1/11.6).
-- M2: WireGuard para acesso remoto.
-- M3: embeddings locais via Ollama + pgvector para busca semântica.
+- M2: WireGuard para acesso remoto — precisa de informação só o usuário tem
+  (topologia da rede, CGNAT, onde o backend vai rodar de fato).
 - M4: backups criptografados, restauração testada, exclusão física vs.
   retenção de histórico (ponto aberto na seção 15 do documento).

@@ -3,6 +3,7 @@ package dev.solaris.memory.service;
 import dev.solaris.memory.domain.Memory;
 import dev.solaris.memory.dto.CreateMemoryRequest;
 import dev.solaris.memory.dto.UpdateMemoryRequest;
+import dev.solaris.memory.embedding.EmbeddingService;
 import dev.solaris.memory.exception.MemoryNotFoundException;
 import dev.solaris.memory.repository.MemoryRepository;
 import dev.solaris.memory.repository.MemorySpecifications;
@@ -12,22 +13,54 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 
 @Service
 public class MemoryService {
 
     private final MemoryRepository repository;
+    private final EmbeddingService embeddingService;
+    private final ExecutorService embeddingExecutor;
     private final Clock clock;
 
-    public MemoryService(MemoryRepository repository, Clock clock) {
+    public MemoryService(MemoryRepository repository, EmbeddingService embeddingService,
+                          ExecutorService embeddingExecutor, Clock clock) {
         this.repository = repository;
+        this.embeddingService = embeddingService;
+        this.embeddingExecutor = embeddingExecutor;
         this.clock = clock;
+    }
+
+    /**
+     * Runs after the enclosing transaction commits, on a background thread:
+     * embedding generation is an HTTP call to Ollama, and it must never hold
+     * a DB connection/transaction open while that happens, never add its
+     * latency to the write's HTTP response (RNF-07), nor undo an otherwise
+     * successful memory write if it fails (RF-10).
+     */
+    private void scheduleEmbedding(UUID memoryId, String content) {
+        if (!embeddingService.isEnabled()) {
+            return;
+        }
+        Runnable embed = () -> embeddingService.embedAndStore(memoryId, content);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    embeddingExecutor.execute(embed);
+                }
+            });
+        } else {
+            embeddingExecutor.execute(embed);
+        }
     }
 
     @Transactional
@@ -52,7 +85,9 @@ public class MemoryService {
                 expiresAt,
                 blankToNull(request.clientRequestId())
         );
-        return new IdempotentResult(repository.save(memory), true);
+        Memory saved = repository.save(memory);
+        scheduleEmbedding(saved.getId(), request.content());
+        return new IdempotentResult(saved, true);
     }
 
     /** Returns any non-deleted memory, expired or not — management views need to see and clear expired items too. */
@@ -81,6 +116,12 @@ public class MemoryService {
         }
 
         memory.applyUpdate(request.content(), newEventAt, newExpiresAt, now);
+
+        // Re-embed only when the text itself changed (RF-09: edits must
+        // update the index) - touching only dates/ttl doesn't need a new vector.
+        if (request.content() != null) {
+            scheduleEmbedding(memory.getId(), memory.getContent());
+        }
         return memory;
     }
 

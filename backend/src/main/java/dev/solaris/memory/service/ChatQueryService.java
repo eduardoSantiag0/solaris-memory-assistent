@@ -4,6 +4,7 @@ import dev.solaris.memory.domain.Memory;
 import dev.solaris.memory.dto.ChatQueryRequest;
 import dev.solaris.memory.dto.ChatQueryResponse;
 import dev.solaris.memory.dto.SourceRef;
+import dev.solaris.memory.embedding.EmbeddingService;
 import dev.solaris.memory.repository.MemoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -36,18 +37,23 @@ public class ChatQueryService {
             "em", "eu", "se", "me", "te", "lhe", "ou", "já", "tá"
     );
 
+    private static final int SEMANTIC_RESULT_LIMIT = 5;
+
     private final MemoryRepository repository;
     private final TemporalExpressionResolver temporalResolver;
     private final ChatIdempotencyCache idempotencyCache;
+    private final EmbeddingService embeddingService;
     private final Clock clock;
 
     public ChatQueryService(MemoryRepository repository,
                              TemporalExpressionResolver temporalResolver,
                              ChatIdempotencyCache idempotencyCache,
+                             EmbeddingService embeddingService,
                              Clock clock) {
         this.repository = repository;
         this.temporalResolver = temporalResolver;
         this.idempotencyCache = idempotencyCache;
+        this.embeddingService = embeddingService;
         this.clock = clock;
     }
 
@@ -76,19 +82,36 @@ public class ChatQueryService {
             // No memory has a confirmed eventAt in that window — fall back to
             // plain text matching, but say so instead of silently guessing (RF-12).
             List<Memory> fallback = searchByKeywords(now, lower);
-            if (fallback.isEmpty()) {
-                return ChatQueryResponse.notFound();
+            if (!fallback.isEmpty()) {
+                return buildResponse(fallback, List.of(
+                        "Nenhuma memória tem data de evento confirmada para \"" + window.label()
+                                + "\"; mostrando correspondência por texto."));
             }
-            return buildResponse(fallback, List.of(
-                    "Nenhuma memória tem data de evento confirmada para \"" + window.label()
-                            + "\"; mostrando correspondência por texto."));
+            return searchBySemanticsOrNotFound(now, question, List.of(
+                    "Nenhuma memória tem data de evento confirmada para \"" + window.label() + "\"."));
         }
 
         List<Memory> matches = searchByKeywords(now, lower);
-        if (matches.isEmpty()) {
+        if (!matches.isEmpty()) {
+            return buildResponse(matches, List.of());
+        }
+        return searchBySemanticsOrNotFound(now, question, List.of());
+    }
+
+    /**
+     * Only reached once keyword matching has already come up empty (RF-05:
+     * vector similarity never overrides a text match, only fills in when
+     * there isn't one). Always labeled as a similarity-based guess, never
+     * presented the same way as an exact hit (RF-13).
+     */
+    private ChatQueryResponse searchBySemanticsOrNotFound(Instant now, String question, List<String> baseWarnings) {
+        List<Memory> semanticMatches = embeddingService.findSemanticMatches(now, question, SEMANTIC_RESULT_LIMIT);
+        if (semanticMatches.isEmpty()) {
             return ChatQueryResponse.notFound();
         }
-        return buildResponse(matches, List.of());
+        List<String> warnings = new ArrayList<>(baseWarnings);
+        warnings.add("Nenhuma correspondência exata de texto; esta resposta é por similaridade semântica, confira a fonte.");
+        return buildResponse(semanticMatches, warnings);
     }
 
     private List<Memory> searchByKeywords(Instant now, String lowerQuestion) {
