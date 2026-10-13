@@ -1,0 +1,19 @@
+# Backend (Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Office lock files
+.~lock.*#
+
+# Secrets — never commit real keys/credentials
+.env
+*.env.local

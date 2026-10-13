@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: solaris-memory-postgres
+    environment:
+      POSTGRES_DB: solaris_memory
+      POSTGRES_USER: solaris
+      POSTGRES_PASSWORD: solaris
+    ports:
+      # Host port 5434 so this doesn't clash with other Postgres containers
+      # already running on this machine (e.g. one on 5433 for another project).
+      - "5434:5432"
+    volumes:
+      - solaris-memory-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  solaris-memory-postgres-data:
