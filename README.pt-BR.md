@@ -1,4 +1,4 @@
-# solaris-memory-assistent
+# 🪐 solaris-memory-assistent
 
 🇧🇷 Português (este arquivo) · 🇺🇸 [English](README.md)
 
@@ -13,7 +13,22 @@ aceite) que não faz parte deste repositório — os comentários no código e
 este README citam ele como RF-xx/RNF-xx/CT-xx e números de seção, para
 rastreabilidade.
 
-## Por que "Solaris"?
+## 🖼️ Capturas de tela
+
+Design: "retrô calmo", paleta oficial **Estação**, tipografia IBM Plex
+Sans/Mono. Pacote completo em
+[`design/solaris-handoff/`](design/solaris-handoff/).
+
+<p align="center">
+  <img src="design/solaris-handoff/referencia-png/02-chat.png" width="23%" alt="Tela de chat, tema claro" />
+  <img src="design/solaris-handoff/referencia-png/13-chat-escuro.png" width="23%" alt="Tela de chat, tema escuro" />
+  <img src="design/solaris-handoff/referencia-png/05-memorias.png" width="23%" alt="Lista de memórias" />
+  <img src="design/solaris-handoff/referencia-png/09-aparencia.png" width="23%" alt="Ajustes de aparência com as 5 paletas" />
+</p>
+
+<p align="center"><sub>Chat (claro) · Chat (escuro) · Memórias · Aparência — todos os dados são fictícios (RNF-12)</sub></p>
+
+## 🌊 Por que "Solaris"?
 
 O nome vem do filme *Solaris* (1972), de Andrei Tarkovsky, no qual um
 oceano senciente reconstrói fragmentos das memórias de quem o visita — não
@@ -32,7 +47,7 @@ resolver corretamente toda vez que responde a uma pergunta.
 
 *Solaris — uma memória que responde de volta.*
 
-## Decisões tomadas nesta fase
+## 🧭 Decisões tomadas nesta fase
 
 (além do que o documento de requisitos especifica)
 
@@ -67,7 +82,7 @@ resolver corretamente toda vez que responde a uma pergunta.
   crus para calcular distância; não tem como buscar um vetor cifrado com
   ele.
 
-## O que existe
+## 🧩 O que existe
 
 `backend/` — API Spring Boot (Java 17) cobrindo os marcos M1 e M3 do
 roteiro:
@@ -144,7 +159,7 @@ UDP do WireGuard exposta à internet (RNF-01). Ver `deploy/README.md` para
 o passo a passo — **ainda não verificado contra a VM real**, já que esta
 sessão não tem acesso a ela.
 
-## Rodando localmente
+## 🚀 Rodando localmente
 
 ```bash
 docker compose up -d                 # Postgres (com pgvector) em localhost:5434
@@ -166,7 +181,7 @@ próprio laptop**):
 | `APP_EMBEDDINGS_ENABLED` | `false` desliga a busca semântica (M3) por completo |
 | `APP_OLLAMA_URL` | onde está o Ollama (default `http://localhost:11434`) |
 
-### Testes
+### ✅ Testes
 
 ```bash
 cd backend
@@ -186,7 +201,7 @@ conseguia conectar no próprio container Postgres (connection refused logo
 após ele subir saudável), mesmo cada classe tendo seu container isolado;
 isolar o processo eliminou o problema.
 
-### Frontend
+### 📱 Frontend
 
 ```bash
 cd frontend
@@ -194,7 +209,7 @@ cd frontend
 ./gradlew :composeApp:assembleDebug  # APK debug (precisa do Android SDK)
 ```
 
-## Próximos passos (não implementados ainda)
+## 🛠️ Próximos passos (não implementados ainda)
 
 - Fonte bitmap/pixel real para a tipografia (hoje usa fonte do sistema em
   negrito como aproximação) e dithering decorativo (seção 11.1/11.6).
