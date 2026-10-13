@@ -7,6 +7,16 @@ backend/.mvn/wrapper/maven-wrapper.jar
 *.iml
 .vscode/
 
+# Frontend (Compose Multiplatform / Gradle / Android)
+frontend/local.properties
+frontend/.gradle/
+frontend/.kotlin/
+frontend/build/
+frontend/composeApp/build/
+frontend/*/build/
+frontend/captures/
+frontend/.cxx/
+
 # OS
 .DS_Store
 Thumbs.db

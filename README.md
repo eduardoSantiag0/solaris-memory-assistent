@@ -8,10 +8,10 @@ no repositório e as decisões de arquitetura tomadas além do documento.
 
 - **Frontend**: Compose Multiplatform (Kotlin), rodando em Android e Desktop
   a partir da mesma base de código — o documento especifica Android nativo,
-  mas o uso real exige acesso também pelo desktop. Ainda não implementado
-  (ver "Próximos passos").
-- **Escopo desta entrega**: apenas o backend (M1 — Núcleo local do roadmap,
-  seção 14 do documento). Frontend vem depois.
+  mas o uso real exige acesso também pelo desktop.
+- **Escopo**: backend M1 (Núcleo local, seção 14 do documento) primeiro,
+  depois uma primeira fatia de UI (navegação + tema + chat + memórias +
+  ajustes) ligada a ele.
 - **Criptografia de campo**: o backend vai rodar num servidor compartilhado
   com outras duas pessoas, então o campo `content` das memórias é
   criptografado com AES-256-GCM *na aplicação*, não só no disco — mesmo
@@ -23,13 +23,14 @@ no repositório e as decisões de arquitetura tomadas além do documento.
   cifradas (status, datas) e filtra por texto já descriptografado na
   aplicação. Isso é adequado para o volume pessoal de memórias que o
   documento assume; não escalaria para milhões de linhas.
-- **Dark mode**: quando a UI (Compose Multiplatform) for implementada, terá
-  suporte a tema claro/escuro desde a primeira versão, usando tokens de cor
-  semânticos (fundo, superfície, texto, borda, destaque) com dois conjuntos
-  de valores — um padrão de theming já comum em apps com paleta
-  personalizada (ex.: tema Obsidian "retronotes", usado como referência:
-  `https://github.com/sr-campelo/retronotes`). A alternância fica em
-  Ajustes, como já previsto na seção 10.3 do documento.
+- **Dark mode**: suportado desde esta primeira versão da UI, com tokens de
+  cor semânticos (fundo, superfície, texto, borda, destaque — ver
+  `theme/Color.kt`) e dois conjuntos de valores, mesmo padrão de theming do
+  tema Obsidian "retronotes" usado como referência
+  (`https://github.com/sr-campelo/retronotes`: variáveis tipo
+  `--background-primary`/`--text-normal` redefinidas por modo). A
+  alternância fica em Ajustes (seção 10.3 do documento) e troca o app
+  inteiro, testado rodando o app desktop de verdade.
 
 ## O que existe
 
@@ -57,6 +58,24 @@ Detalhes relevantes:
   de rede não duplica) e em `POST /chat/query` (cache curto em memória).
 - Expressões temporais simples em português (`ontem`, `hoje`, `semana
   passada`) resolvem contra `eventAt`, nunca contra `createdAt` (RF-12).
+
+`frontend/` — app Compose Multiplatform (Kotlin, Android + Desktop a partir
+do mesmo módulo `composeApp`):
+
+- Design system mínimo em `components/` (`PixelButton`, `RetroTextField`,
+  `RetroChatBubble`, `MemoryCard`) seguindo a estética "Colorful Retro
+  Macintosh Pixel UI" do documento (seção 11): contornos pretos grossos,
+  sombras rígidas deslocadas (nunca blur), sem cantos muito arredondados.
+  Paleta oficial da seção 11.2 em `theme/Color.kt`, com variante escura
+  derivada (ver decisão de dark mode acima).
+- Três telas (`screens/`): Chat (comandos `/add`, `/add-temp`, perguntas
+  em linguagem natural), Memórias (lista, prazo restante, exclusão),
+  Ajustes (tema, servidor, login). Navegação por abas inferior — layout
+  pensado para celular, mas sem exigir os três painéis simultâneos em
+  telas grandes (seção 11.3).
+- `network/ApiClient.kt` fala com o backend acima via Ktor; sessão e
+  preferências ainda só em memória (sem persistência local — próximo
+  passo).
 
 ## Rodando localmente
 
@@ -89,9 +108,20 @@ real, incluindo os casos de aceite do documento (CT-01 a CT-11; CT-12 é de
 UI e CT-07 depende do cliente, não testáveis aqui) e uma verificação de que
 o conteúdo realmente está cifrado na coluna.
 
+### Frontend
+
+```bash
+cd frontend
+./gradlew :composeApp:run          # app desktop
+./gradlew :composeApp:assembleDebug  # APK debug (precisa do Android SDK)
+```
+
 ## Próximos passos (não implementados ainda)
 
-- M2: frontend Compose Multiplatform (Android + Desktop), com dark mode.
+- Persistir sessão (token) e preferência de tema localmente (DataStore no
+  Android, arquivo de prefs no desktop) — hoje tudo reseta ao fechar o app.
+- Fonte bitmap/pixel real para a tipografia (hoje usa fonte do sistema em
+  negrito como aproximação) e dithering decorativo (seção 11.1/11.6).
 - M2: WireGuard para acesso remoto.
 - M3: embeddings locais via Ollama + pgvector para busca semântica.
 - M4: backups criptografados, restauração testada, exclusão física vs.
