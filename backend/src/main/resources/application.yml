@@ -32,8 +32,8 @@ app:
   auth:
     username: ${APP_USER:admin}
     # BCrypt hash of the single-user password. This default hashes the
-    # placeholder "changeme" — override APP_PASSWORD_HASH for anything real.
-    password-hash: ${APP_PASSWORD_HASH:$2b$10$uXPf8xwUpmCUJLSYIDlbUuA/syGy4SPHA6p0KRN4ER8.DludZSwzq}
+    # placeholder "admin" — override APP_PASSWORD_HASH for anything real.
+    password-hash: ${APP_PASSWORD_HASH:$2b$10$rbAB5CdYagtSzDcpsQ/iPu96Xjg5ekfsWm4LAI7c0NuwN1UH36426}
   jwt:
     secret: ${APP_JWT_SECRET:change-this-secret-in-env-it-must-be-at-least-32-bytes-long}
     expiration-minutes: ${APP_JWT_EXPIRATION_MINUTES:720}

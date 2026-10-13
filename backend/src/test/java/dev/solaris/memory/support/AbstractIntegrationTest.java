@@ -28,7 +28,7 @@ import java.time.Instant;
 public abstract class AbstractIntegrationTest {
 
     protected static final String TEST_USERNAME = "admin";
-    protected static final String TEST_PASSWORD = "changeme";
+    protected static final String TEST_PASSWORD = "admin";
     private static final Instant BASELINE_INSTANT = Instant.parse("2026-01-01T12:00:00Z");
 
     @Container

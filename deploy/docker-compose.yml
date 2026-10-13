@@ -18,7 +18,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - internal
+      internal:
+        # Pinned (not just the backend) — Docker's dynamic allocator handed
+        # this same address to whichever service started first otherwise,
+        # colliding with backend's pinned IP below.
+        ipv4_address: 172.28.0.4
     # No "ports:" — only reachable from other containers on this network.
 
   backend:

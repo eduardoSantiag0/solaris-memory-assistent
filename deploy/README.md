@@ -9,6 +9,15 @@ Confirmado nesta sessão: `falcon.whatbox.ca` resolve para um IP público real
 (`72.21.17.54`), não está atrás de CGNAT — WireGuard direto funciona, sem
 precisar de Tailscale/relay.
 
+**Validado localmente** (Docker Desktop, não a VM): os três containers
+sobem, o backend conecta no Postgres e roda as migrações, o WireGuard gera
+chaves e ativa o túnel de verdade (inclusive o QR code do peer aparece nos
+logs), e o container do WireGuard consegue alcançar a API pelo IP interno
+fixo — confirmando que a topologia de rede funciona e que só a porta UDP
+do WireGuard fica exposta (Postgres e API não têm `ports:` publicado). O
+que não dá pra validar sem a VM real: a conexão de fato vindo da internet
+até `falcon.whatbox.ca:51820`.
+
 ## 1. Pré-requisitos na VM
 
 ```bash
