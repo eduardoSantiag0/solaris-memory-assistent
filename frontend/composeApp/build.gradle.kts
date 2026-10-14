@@ -94,6 +94,19 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "SolarisMemoryAssistant"
             packageVersion = "1.0.0"
+
+            // Same symbol as assets/icone-app-108.svg (design/solaris-handoff_v2),
+            // rasterized by hand into each OS's native icon format — see
+            // frontend/icons/README.md for how to regenerate.
+            windows {
+                iconFile.set(project.file("icons/icon.ico"))
+            }
+            macOS {
+                iconFile.set(project.file("icons/icon.icns"))
+            }
+            linux {
+                iconFile.set(project.file("icons/icon.png"))
+            }
         }
     }
 }
