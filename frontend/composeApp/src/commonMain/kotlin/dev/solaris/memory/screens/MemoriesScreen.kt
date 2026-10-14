@@ -12,7 +12,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,7 +24,6 @@ import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -34,9 +32,8 @@ import kotlinx.datetime.toLocalDateTime
 private enum class TipoFiltro { TODAS, PERMANENTES, TEMPORARIAS }
 
 @Composable
-fun MemoriesScreen(viewModel: AppViewModel) {
+fun MemoriesScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
     val colors = LocalSolarisColors.current
-    val scope = rememberCoroutineScope()
     var busca by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf(TipoFiltro.TODAS) }
 
@@ -85,7 +82,7 @@ fun MemoriesScreen(viewModel: AppViewModel) {
         LazyColumn(modifier = Modifier.fillMaxSize().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (vigentes.isNotEmpty()) {
                 item { Text("VIGENTES · ${vigentes.size}", style = solarisText.meta, color = colors.textoSecundario) }
-                items(vigentes) { memory -> MemoryRow(memory, scope, viewModel) }
+                items(vigentes) { memory -> MemoryRow(memory, onAbrirDetalhe) }
             }
             if (vencidas.isNotEmpty()) {
                 item {
@@ -96,7 +93,7 @@ fun MemoriesScreen(viewModel: AppViewModel) {
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
-                items(vencidas) { memory -> MemoryRow(memory, scope, viewModel, expirada = true) }
+                items(vencidas) { memory -> MemoryRow(memory, onAbrirDetalhe, expirada = true) }
             }
         }
     }
@@ -114,7 +111,7 @@ private fun FiltroTab(label: String, active: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MemoryRow(memory: MemoryResponse, scope: kotlinx.coroutines.CoroutineScope, viewModel: AppViewModel, expirada: Boolean = false) {
+private fun MemoryRow(memory: MemoryResponse, onAbrirDetalhe: (String) -> Unit, expirada: Boolean = false) {
     val numero = memory.id.takeLast(4).uppercase()
     MemoryCardItem(
         numero = numero,
@@ -132,7 +129,7 @@ private fun MemoryRow(memory: MemoryResponse, scope: kotlinx.coroutines.Coroutin
                 }
             }
         },
-        onClick = { scope.launch { /* TODO: tela de Detalhe (06) */ } },
+        onClick = { onAbrirDetalhe(memory.id) },
     )
 }
 

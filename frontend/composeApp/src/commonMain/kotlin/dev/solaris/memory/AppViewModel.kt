@@ -121,6 +121,37 @@ class AppViewModel(private val settings: AppSettings) {
         }
     }
 
+    /**
+     * Used by NovaMemoriaSheet (tela 04) — a structured POST, not text sent
+     * through the chat's command parser (HANDOFF.md 5.1: the app decides
+     * what gets stored, never the model). Returns an error message on
+     * failure so the sheet can stay open with the text preserved, instead
+     * of closing early (RF-10, RNF-06: never claim success before the
+     * server confirms it).
+     */
+    suspend fun createMemoryFromForm(content: String, ttlDays: Int?, eventAt: String?, sensitive: Boolean): String? {
+        return try {
+            val created = api.createMemory(
+                CreateMemoryRequest(
+                    content = content,
+                    ttlDays = ttlDays,
+                    eventAt = eventAt,
+                    sensitivity = if (sensitive) "SENSITIVE" else null,
+                ),
+            )
+            refreshMemories()
+            val confirmacao = if (ttlDays != null) {
+                "Salva como temporária. Vale até ${created.expiresAt}."
+            } else {
+                "Salva como permanente."
+            }
+            chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, confirmacao, agora())
+            null
+        } catch (e: Exception) {
+            e.message ?: "Falha ao salvar — tente de novo."
+        }
+    }
+
     /** Parses /add and /add-temp the same way the backend expects them translated (doc section 4/8) - the app, not the model, decides what gets stored. */
     suspend fun sendChatInput(rawInput: String) {
         val input = rawInput.trim()

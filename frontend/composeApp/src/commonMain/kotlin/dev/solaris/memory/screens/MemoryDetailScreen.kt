@@ -1,0 +1,172 @@
+package dev.solaris.memory.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import dev.solaris.memory.components.ConfirmDialog
+import dev.solaris.memory.components.DangerButton
+import dev.solaris.memory.components.SecondaryButton
+import dev.solaris.memory.components.Stamp
+import dev.solaris.memory.components.StampType
+import dev.solaris.memory.network.MemoryResponse
+import dev.solaris.memory.theme.LocalSolarisColors
+import dev.solaris.memory.theme.solarisText
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+/** HANDOFF.md tela 06. "Editar" reaproveita a folha Nova memória (não implementado ainda - fica para a próxima leva). */
+@Composable
+fun MemoryDetailScreen(memory: MemoryResponse, onExcluido: () -> Unit) {
+    var confirmandoExclusao by remember { mutableStateOf(false) }
+
+    MemoryDetailContent(memory) { confirmandoExclusao = true }
+
+    if (confirmandoExclusao) {
+        val inicio = memory.content.take(40).let { if (memory.content.length > 40) "$it..." else it }
+        ConfirmDialog(
+            titulo = "Excluir esta ficha?",
+            texto = "“$inicio” sai das buscas na hora. Não dá para desfazer.",
+            confirmarLabel = "Excluir",
+            onConfirmar = { confirmandoExclusao = false; onExcluido() },
+            onCancelar = { confirmandoExclusao = false },
+        )
+    }
+}
+
+@Composable
+private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> Unit) {
+    val colors = LocalSolarisColors.current
+    val isTemporaria = memory.expiresAt != null
+    val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
+
+    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(16.dp)) {
+        Box {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.superficie)
+                    .border(1.dp, colors.filete)
+                    .padding(12.dp),
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("TEXTO REGISTRADO", style = solarisText.meta, color = colors.textoSecundario)
+                    Stamp(
+                        when {
+                            isVencida -> StampType.VENCIDA
+                            isTemporaria -> StampType.TEMPORARIA
+                            else -> StampType.PERMANENTE
+                        },
+                    )
+                }
+                Text(memory.content, style = solarisText.destaqueFicha, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 4.dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(colors.fundo)
+                    .border(1.dp, colors.filete, CircleShape),
+            )
+        }
+
+        val expiresAt = memory.expiresAt
+        if (isTemporaria && !isVencida && expiresAt != null) {
+            HorizontalRule(topPadding = 20.dp)
+            Text("VENCE EM", style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 16.dp))
+            val (contagem, proporcao) = contagemRegressiva(memory.createdAt, expiresAt)
+            Text(contagem, style = solarisText.contador, color = colors.texto, modifier = Modifier.padding(top = 4.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(colors.trilho).padding(top = 8.dp)) {
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(proporcao.coerceIn(0f, 1f)).background(colors.acao))
+            }
+            Text(
+                "Até ${formatarDataHora(expiresAt)}. Depois disso, não entra mais nas respostas.",
+                style = solarisText.corpo,
+                color = colors.texto,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+
+        HorizontalRule(topPadding = 20.dp)
+        MetaRow("REGISTRADA", formatarDataHora(memory.createdAt))
+        MetaRow("EVENTO", memory.eventAt?.let { formatarDataHora(it) } ?: "Não informado")
+        MetaRow("ATUALIZADA", if (memory.updatedAt != memory.createdAt) formatarDataHora(memory.updatedAt) else "—")
+        MetaRow("STATUS", if (isVencida) "Vencida" else "Ativa")
+
+        Spacer(Modifier.weight(1f))
+
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+            SecondaryButton(text = "Editar", onClick = { /* TODO: reaproveitar NovaMemoriaSheet em modo edição */ }, modifier = Modifier.weight(1f))
+            Spacer(Modifier.width(12.dp))
+            DangerButton(text = "Excluir", onClick = onPedirExclusao, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun MetaRow(label: String, valor: String) {
+    val colors = LocalSolarisColors.current
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = solarisText.meta, color = colors.textoSecundario)
+        Text(valor, style = solarisText.corpo, color = colors.texto)
+    }
+}
+
+@Composable
+private fun HorizontalRule(topPadding: androidx.compose.ui.unit.Dp = 0.dp) {
+    val colors = LocalSolarisColors.current
+    Box(modifier = Modifier.fillMaxWidth().padding(top = topPadding).height(1.dp).background(colors.filete))
+}
+
+private fun formatarDataHora(iso: String): String {
+    return try {
+        val dt = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
+        "${dt.dayOfMonth.toString().padStart(2, '0')}/${dt.monthNumber.toString().padStart(2, '0')}/${dt.year} · " +
+            "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+    } catch (e: Exception) {
+        iso
+    }
+}
+
+private fun contagemRegressiva(createdAtIso: String, expiresAtIso: String): Pair<String, Float> {
+    return try {
+        val criado = Instant.parse(createdAtIso)
+        val vence = Instant.parse(expiresAtIso)
+        val agora = Clock.System.now()
+        val restante = vence - agora
+        val total = vence - criado
+
+        if (restante.isNegative()) return "0m" to 0f
+
+        val dias = restante.inWholeDays
+        val horas = restante.inWholeHours % 24
+        val minutos = restante.inWholeMinutes % 60
+        val texto = buildString {
+            if (dias > 0) append("${dias}d ")
+            append("${horas}h ")
+            append("${minutos}m")
+        }.trim()
+
+        val proporcao = if (total.inWholeSeconds > 0) (restante.inWholeSeconds.toFloat() / total.inWholeSeconds.toFloat()) else 0f
+        texto to proporcao
+    } catch (e: Exception) {
+        "—" to 0f
+    }
+}

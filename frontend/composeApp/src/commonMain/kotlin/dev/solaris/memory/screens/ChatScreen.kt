@@ -19,6 +19,7 @@ import dev.solaris.memory.ChatRole
 import dev.solaris.memory.components.AssistantMessageBody
 import dev.solaris.memory.components.AssistantMessageMeta
 import dev.solaris.memory.components.Composer
+import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.theme.LocalSolarisColors
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 fun ChatScreen(viewModel: AppViewModel) {
     val colors = LocalSolarisColors.current
     var input by remember { mutableStateOf("") }
+    var mostrarNovaMemoria by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -36,41 +38,52 @@ fun ChatScreen(viewModel: AppViewModel) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.fundo)
-            .padding(16.dp),
-    ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.fundo)
+                .padding(16.dp),
         ) {
-            items(viewModel.chatHistory) { entry ->
-                when (entry.role) {
-                    ChatRole.USER -> UserMessage(entry.text)
-                    ChatRole.ASSISTANT -> Column {
-                        AssistantMessageMeta(entry.horario)
-                        AssistantMessageBody(entry.text, modifier = Modifier.padding(top = 2.dp))
-                        if (entry.caption != null) {
-                            AssistantMessageMeta(entry.caption, modifier = Modifier.padding(top = 2.dp))
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                items(viewModel.chatHistory) { entry ->
+                    when (entry.role) {
+                        ChatRole.USER -> UserMessage(entry.text)
+                        ChatRole.ASSISTANT -> Column {
+                            AssistantMessageMeta(entry.horario)
+                            AssistantMessageBody(entry.text, modifier = Modifier.padding(top = 2.dp))
+                            if (entry.caption != null) {
+                                AssistantMessageMeta(entry.caption, modifier = Modifier.padding(top = 2.dp))
+                            }
                         }
                     }
                 }
             }
+
+            Composer(
+                value = input,
+                onValueChange = { input = it },
+                onNovaMemoria = { mostrarNovaMemoria = true },
+                onEnviar = {
+                    val toSend = input
+                    input = ""
+                    scope.launch { viewModel.sendChatInput(toSend) }
+                },
+                modifier = Modifier.padding(top = 12.dp),
+            )
         }
 
-        Composer(
-            value = input,
-            onValueChange = { input = it },
-            onNovaMemoria = { /* TODO: NovaMemoriaSheet (tela 04) */ },
-            onEnviar = {
-                val toSend = input
-                input = ""
-                scope.launch { viewModel.sendChatInput(toSend) }
-            },
-            modifier = Modifier.padding(top = 12.dp),
-        )
+        if (mostrarNovaMemoria) {
+            NovaMemoriaSheet(
+                onDismiss = { mostrarNovaMemoria = false },
+                onSalvar = { content, ttlDays, sensitive ->
+                    viewModel.createMemoryFromForm(content, ttlDays, null, sensitive)
+                },
+            )
+        }
     }
 }

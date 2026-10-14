@@ -13,6 +13,8 @@ data class CreateMemoryRequest(
     val content: String,
     val ttlDays: Int? = null,
     val eventAt: String? = null,
+    /** "NORMAL" | "SENSITIVE" — matches the backend's Sensitivity enum name. */
+    val sensitivity: String? = null,
     val clientRequestId: String? = null,
 )
 
