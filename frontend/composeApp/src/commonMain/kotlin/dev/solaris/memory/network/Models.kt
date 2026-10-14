@@ -62,6 +62,8 @@ data class ChatQueryResponse(
     val sources: List<SourceRef>,
     val found: Boolean,
     val warnings: List<String>,
+    /** Correções 14/10 item 5 — true when [answer] is already the full "qual vale?" sentence; render as-is, one SourceLink per entry in [sources], never wrap it. */
+    val conflict: Boolean = false,
 )
 
 @Serializable

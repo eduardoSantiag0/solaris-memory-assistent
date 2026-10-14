@@ -81,7 +81,7 @@ class MemoryApiIntegrationTest extends AbstractIntegrationTest {
         assertThat(answer).isEqualTo(ChatQueryResponse.notFound());
     }
 
-    // CT-06
+    // CT-06 — Correções 14/10 item 5: never pick one silently, ask instead, one source per ficha.
     @Test
     void conflictingMemoriesForTheSameKeyAreFlaggedAsAmbiguous() {
         createMemory("Deixei a chave do carro na cozinha.", null);
@@ -90,7 +90,21 @@ class MemoryApiIntegrationTest extends AbstractIntegrationTest {
         ChatQueryResponse answer = query("Onde deixei a chave do carro?");
 
         assertThat(answer.found()).isTrue();
-        assertThat(answer.warnings()).isNotEmpty();
+        assertThat(answer.conflict()).isTrue();
+        assertThat(answer.answer()).contains("Qual vale?").doesNotContain("aviso:");
+        assertThat(answer.sources()).hasSize(2);
+    }
+
+    // CT-13 (Correções 14/10 item 1, RF-04/CT-05) — a greeting never consults memories, regardless of what's stored.
+    @Test
+    void greetingWithoutAQuestionNeverConsultsMemories() {
+        createMemory("Minha carteira de motorista fica na mochila.", null);
+
+        ChatQueryResponse answer = query("Olá");
+
+        assertThat(answer.found()).isFalse();
+        assertThat(answer.sources()).isEmpty();
+        assertThat(answer.answer()).isEqualTo("Oi! Pergunte sobre algo que você registrou, ou toque em + para guardar uma memória nova.");
     }
 
     // CT-08

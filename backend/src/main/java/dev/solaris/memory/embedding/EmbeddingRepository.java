@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Raw JDBC on purpose, not a Spring Data method: pgvector's {@code <->}
+ * Raw JDBC on purpose, not a Spring Data method: pgvector's {@code <=>}
  * operator and the {@link PGvector} binding aren't something JPQL/Criteria
  * can express, and {@code PGvector.registerTypes} has to run per physical
  * connection, which {@link ConnectionCallback} gives direct access to.
@@ -39,8 +39,15 @@ public class EmbeddingRepository {
         });
     }
 
-    /** Active (not deleted, not expired), non-null-embedding candidates ordered by cosine distance to the query vector, closest first. */
-    public List<UUID> findNearestActiveIds(Instant now, float[] queryEmbedding, int limit) {
+    /**
+     * Active (not deleted, not expired), non-null-embedding candidates
+     * ordered by cosine distance to the query vector, closest first — and
+     * discarded past {@code maxDistance} (Correções 14/10 item 1, RF-04):
+     * the "nearest" candidate is still worthless if nothing is actually
+     * related, so the cutoff has to happen in the query itself, not just
+     * by taking fewer results.
+     */
+    public List<UUID> findNearestActiveIds(Instant now, float[] queryEmbedding, int limit, double maxDistance) {
         return jdbcTemplate.execute((ConnectionCallback<List<UUID>>) conn -> {
             PGvector.registerTypes(conn);
             String sql = """
@@ -48,13 +55,16 @@ public class EmbeddingRepository {
                     where status <> 'DELETED'
                       and (expires_at is null or expires_at > ?)
                       and embedding is not null
-                    order by embedding <-> ?
+                      and embedding <=> ? < ?
+                    order by embedding <=> ?
                     limit ?
                     """;
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setObject(1, java.sql.Timestamp.from(now));
                 ps.setObject(2, new PGvector(queryEmbedding));
-                ps.setInt(3, limit);
+                ps.setDouble(3, maxDistance);
+                ps.setObject(4, new PGvector(queryEmbedding));
+                ps.setInt(5, limit);
                 List<UUID> ids = new ArrayList<>();
                 try (var rs = ps.executeQuery()) {
                     while (rs.next()) {

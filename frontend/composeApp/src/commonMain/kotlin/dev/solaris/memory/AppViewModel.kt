@@ -14,6 +14,7 @@ import dev.solaris.memory.settings.AppSettings
 import dev.solaris.memory.theme.Palette
 import dev.solaris.memory.theme.ThemeMode
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -23,13 +24,25 @@ data class ChatEntry(
     val role: ChatRole,
     val text: String,
     val horario: String,
-    val caption: String? = null,
+    /** Correções 14/10 item 7: data (yyyy-MM-dd) por entrada, só para decidir quando desenhar o separador "— dd/mm/aaaa —" entre turnos de dias diferentes. */
+    val data: String = hojeData(),
     val sensivel: Boolean = false,
     /** HANDOFF.md v1.1 "Linha de fonte" — presente só nas respostas a perguntas, não nas confirmações de gravação. */
     val fonte: SourceRef? = null,
+    /** Correções 14/10 item 5 — não-vazio só na resposta de conflito: uma SourceLink por ficha, `text` já é a frase inteira ("... Qual vale?"), nunca embrulhada de novo. */
+    val fontesConflito: List<SourceRef> = emptyList(),
     /** HANDOFF.md v1.1 "Confirmação de gravação" — renderiza com a bandeirinha (components/SavedMessage) em vez de texto corrido comum. */
     val salva: Boolean = false,
 )
+
+/** Correções 14/10 item 6: textos exatos de HANDOFF.md 5.5 — sempre "dd/mm, HH:mm", nunca o ISO bruto. */
+private fun formatarDataHoraVirgula(iso: String): String = try {
+    val dt = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
+    "${dt.dayOfMonth.toString().padStart(2, '0')}/${dt.monthNumber.toString().padStart(2, '0')}, " +
+        "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+} catch (e: Exception) {
+    iso
+}
 
 /** NovaMemoriaSheet (telas 04/06) reports the form's resolved state, used verbatim both to create and to edit a memory. */
 data class NovaMemoriaFormResultado(
@@ -45,6 +58,8 @@ private fun agora(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     return "${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}"
 }
+
+private fun hojeData(): String = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
 
 /**
  * Deliberately not a DI-framework ViewModel - this is still an early UI
@@ -182,10 +197,12 @@ class AppViewModel(private val settings: AppSettings) {
                 ),
             )
             refreshMemories()
-            val confirmacao = if (ttlDays != null) {
-                "Salva como temporária. Vale até ${created.expiresAt}."
-            } else {
-                "Salva como permanente."
+            // Textos exatos de HANDOFF.md 5.5 (Correções 14/10 item 6).
+            val confirmacao = when {
+                ttlDays != null && sensitive -> "Salva como temporária e sensível. Vale até ${formatarDataHoraVirgula(created.expiresAt!!)}."
+                ttlDays != null -> "Salva como temporária. Vale até ${formatarDataHoraVirgula(created.expiresAt!!)}."
+                sensitive -> "Salva como permanente e sensível."
+                else -> "Salva como permanente."
             }
             chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, confirmacao, agora(), salva = true)
             null
@@ -215,7 +232,13 @@ class AppViewModel(private val settings: AppSettings) {
         }
     }
 
-    /** Parses /add and /add-temp the same way the backend expects them translated (doc section 4/8) - the app, not the model, decides what gets stored. */
+    /**
+     * Parses /add, /add-temp and /add-sensitive the same way the backend
+     * expects them translated (doc section 4/8) - the app, not the model,
+     * decides what gets stored. There is no /add-temp-sensitive: per
+     * Correções 14/10 item 9, temporary+sensitive stays form-only (Nova
+     * memória), chat only ever approved the three commands in tela 03.
+     */
     suspend fun sendChatInput(rawInput: String) {
         val input = rawInput.trim()
         if (input.isEmpty()) return
@@ -224,23 +247,6 @@ class AppViewModel(private val settings: AppSettings) {
 
         try {
             when {
-                input.startsWith("/add-temp-sensitive") -> {
-                    val rest = input.removePrefix("/add-temp-sensitive").trim()
-                    val parts = rest.split(" ", limit = 2)
-                    val days = parts.getOrNull(0)?.toIntOrNull()
-                    val text = parts.getOrNull(1)?.trim().orEmpty()
-                    if (days == null || days <= 0 || text.isEmpty()) {
-                        chatHistory = chatHistory + ChatEntry(
-                            ChatRole.ASSISTANT, "Uso: /add-temp-sensitive <dias> <texto>. Exemplo: /add-temp-sensitive 2 Senha do wifi: abc123.", agora(),
-                        )
-                        return
-                    }
-                    val created = api.createMemory(CreateMemoryRequest(content = text, ttlDays = days, sensitivity = "SENSITIVE"))
-                    refreshMemories()
-                    chatHistory = chatHistory + ChatEntry(
-                        ChatRole.ASSISTANT, "Memória temporária e sensível criada.", agora(), caption = "válida até ${created.expiresAt}", salva = true,
-                    )
-                }
                 input.startsWith("/add-sensitive") -> {
                     val text = input.removePrefix("/add-sensitive").trim()
                     if (text.isEmpty()) {
@@ -251,7 +257,7 @@ class AppViewModel(private val settings: AppSettings) {
                     }
                     api.createMemory(CreateMemoryRequest(content = text, sensitivity = "SENSITIVE"))
                     refreshMemories()
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente e sensível criada.", agora(), salva = true)
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Salva como permanente e sensível.", agora(), salva = true)
                 }
                 input.startsWith("/add-temp") -> {
                     val rest = input.removePrefix("/add-temp").trim()
@@ -267,7 +273,7 @@ class AppViewModel(private val settings: AppSettings) {
                     val created = api.createMemory(CreateMemoryRequest(content = text, ttlDays = days))
                     refreshMemories()
                     chatHistory = chatHistory + ChatEntry(
-                        ChatRole.ASSISTANT, "Memória temporária criada.", agora(), caption = "válida até ${created.expiresAt}", salva = true,
+                        ChatRole.ASSISTANT, "Salva como temporária. Vale até ${formatarDataHoraVirgula(created.expiresAt!!)}.", agora(), salva = true,
                     )
                 }
                 input.startsWith("/add") -> {
@@ -280,15 +286,20 @@ class AppViewModel(private val settings: AppSettings) {
                     }
                     api.createMemory(CreateMemoryRequest(content = text))
                     refreshMemories()
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente criada.", agora(), salva = true)
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Salva como permanente.", agora(), salva = true)
                 }
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())
+                    if (response.conflict) {
+                        chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), fontesConflito = response.sources)
+                        return
+                    }
                     val melhorFonte = response.sources.firstOrNull()
                     val sensivel = melhorFonte?.sensitivity == "SENSITIVE"
                     chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), sensivel = sensivel, fonte = melhorFonte)
+                    // HANDOFF.md 5.5: nunca prefixar com rótulos técnicos como "aviso:".
                     response.warnings.forEach { warning ->
-                        chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "aviso: $warning", agora())
+                        chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, warning, agora())
                     }
                 }
             }

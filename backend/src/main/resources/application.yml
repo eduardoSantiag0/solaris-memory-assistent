@@ -50,6 +50,15 @@ app:
     ollama-base-url: ${APP_OLLAMA_URL:http://localhost:11434}
     model: ${APP_EMBEDDINGS_MODEL:nomic-embed-text}
     dimensions: 768
+    # Correções 14/10 item 1 (RF-04/CT-05/CT-13): cosine distance above this
+    # is treated as "not actually related" and discarded, so an unrelated
+    # question never surfaces the "closest, but still wrong" memory. 0.42
+    # was picked by embedding this project's own CT fixtures with the local
+    # nomic-embed-text model (see calibration notes in ChatQueryServiceTest) —
+    # it is a pragmatic cutoff for this specific small model and short
+    # Portuguese sentences, not a universal guarantee; thematically adjacent
+    # but unrelated pairs can still occasionally slip through.
+    max-distance: ${APP_EMBEDDINGS_MAX_DISTANCE:0.42}
 
 logging:
   level:

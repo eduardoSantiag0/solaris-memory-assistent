@@ -55,7 +55,7 @@ public class EmbeddingService {
         if (queryVector == null) {
             return List.of();
         }
-        List<UUID> nearestIds = embeddingRepository.findNearestActiveIds(now, queryVector, limit);
+        List<UUID> nearestIds = embeddingRepository.findNearestActiveIds(now, queryVector, limit, properties.getMaxDistance());
         if (nearestIds.isEmpty()) {
             return List.of();
         }

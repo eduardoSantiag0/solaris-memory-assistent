@@ -61,6 +61,29 @@ class SemanticSearchIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.warnings()).anyMatch(w -> w.toLowerCase().contains("semântica") || w.toLowerCase().contains("semantica"));
     }
 
+    // CT-13 (Correções 14/10 item 1, RF-04/CT-05): a question with no real
+    // relation to anything stored must never surface the "nearest anyway"
+    // memory — the minimum relevance threshold on the vector search has to
+    // discard it. Waits for the embedding to land via a related paraphrase
+    // first, so the unrelated question below isn't just hitting an empty index.
+    @Test
+    void unrelatedQuestionBelowRelevanceThresholdReturnsNotFound() throws InterruptedException {
+        createMemory("Meu RG é 12.345.678-9.");
+        pollUntilFound("Qual é o número do meu documento de identidade?");
+
+        ChatQueryResponse answer = query("Qual a cor do céu?");
+
+        assertThat(answer.found()).isFalse();
+        assertThat(answer.sources()).isEmpty();
+    }
+
+    private ChatQueryResponse query(String question) {
+        ChatQueryRequest request = new ChatQueryRequest(question, UUID.randomUUID().toString());
+        ResponseEntity<ChatQueryResponse> response = restTemplate.exchange(
+                "/api/v1/chat/query", HttpMethod.POST, authEntity(restTemplate, request), ChatQueryResponse.class);
+        return response.getBody();
+    }
+
     private MemoryResponse createMemory(String content) {
         CreateMemoryRequest request = new CreateMemoryRequest(content, null, null, null, UUID.randomUUID().toString());
         ResponseEntity<MemoryResponse> response = restTemplate.exchange(

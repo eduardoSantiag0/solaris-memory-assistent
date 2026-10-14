@@ -34,7 +34,9 @@ Zerkalo_Documento_de_Requisitos_v1.docx
 design/Requisitos_v1.1.docx
 design/solaris-handoff/docs/Requisitos_v1.1.docx
 design/solaris-handoff_v2/solaris-handoff_2/docs/Requisitos_v1.1.docx
+design/solaris-handoff_v2-1/solaris-handoff/docs/Requisitos_v1.1.docx
 
 # Redundant zip of the handoff directories (same files, already tracked unzipped).
 design/solaris-handoff.zip
 design/solaris-handoff_v2/solaris-handoff_2.zip
+design/solaris-handoff_v2-1/solaris-handoff_2-1.zip

@@ -3,8 +3,9 @@ package dev.solaris.memory.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.ChatRole
@@ -28,6 +30,7 @@ import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.components.deveMostrarAutocomplete
 import dev.solaris.memory.network.SourceRef
 import dev.solaris.memory.theme.LocalSolarisColors
+import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -62,27 +65,43 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(28.dp),
             ) {
-                items(viewModel.chatHistory) { entry ->
-                    when (entry.role) {
-                        ChatRole.USER -> UserMessage(entry.text)
-                        ChatRole.ASSISTANT -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            AssistantMessageMeta(entry.horario)
-                            val fonte = entry.fonte
-                            if (entry.salva) {
-                                SavedMessage(entry.text)
-                            } else if (entry.sensivel) {
-                                MaskedValue(entry.text, viewModel)
-                            } else {
-                                AssistantMessageBody(respostaConversacional(entry.text, fonte))
-                            }
-                            if (fonte != null) {
-                                SourceLink(
-                                    texto = "FICHA ${fonte.id.takeLast(4).uppercase()} · ${formatarDataHoraCurta(fonte.date)}",
-                                    onClick = { onAbrirDetalhe(fonte.id) },
-                                )
-                            }
-                            if (entry.caption != null) {
-                                AssistantMessageMeta(entry.caption)
+                itemsIndexed(viewModel.chatHistory) { index, entry ->
+                    Column(verticalArrangement = Arrangement.spacedBy(28.dp)) {
+                        val anterior = viewModel.chatHistory.getOrNull(index - 1)
+                        if (anterior == null || anterior.data != entry.data) {
+                            Text(
+                                "— ${formatarDataSeparador(entry.data)} —",
+                                style = solarisText.meta,
+                                color = colors.texto,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        when (entry.role) {
+                            ChatRole.USER -> UserMessage(entry.text)
+                            ChatRole.ASSISTANT -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                AssistantMessageMeta(entry.horario)
+                                val fonte = entry.fonte
+                                if (entry.salva) {
+                                    SavedMessage(entry.text)
+                                } else if (entry.sensivel) {
+                                    MaskedValue(entry.text, viewModel)
+                                } else {
+                                    AssistantMessageBody(respostaConversacional(entry.text, fonte))
+                                }
+                                if (entry.fontesConflito.isNotEmpty()) {
+                                    entry.fontesConflito.forEach { ref ->
+                                        SourceLink(
+                                            texto = "FICHA ${ref.id.takeLast(4).uppercase()} · ${formatarDataHoraCurta(ref.date)}",
+                                            onClick = { onAbrirDetalhe(ref.id) },
+                                        )
+                                    }
+                                } else if (fonte != null) {
+                                    SourceLink(
+                                        texto = "FICHA ${fonte.id.takeLast(4).uppercase()} · ${formatarDataHoraCurta(fonte.date)}",
+                                        onClick = { onAbrirDetalhe(fonte.id) },
+                                    )
+                                }
                             }
                         }
                     }
@@ -119,6 +138,14 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
             )
         }
     }
+}
+
+/** Correções 14/10 item 7: ChatEntry.data já vem como "yyyy-MM-dd" (kotlinx.datetime.LocalDate.toString()). */
+private fun formatarDataSeparador(data: String): String = try {
+    val (ano, mes, dia) = data.split("-")
+    "$dia/$mes/$ano"
+} catch (e: Exception) {
+    data
 }
 
 private fun formatarDataHoraCurta(iso: String): String = try {

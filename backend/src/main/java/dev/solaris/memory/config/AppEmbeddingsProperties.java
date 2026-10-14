@@ -9,6 +9,7 @@ public class AppEmbeddingsProperties {
     private String ollamaBaseUrl;
     private String model;
     private int dimensions;
+    private double maxDistance;
 
     public boolean isEnabled() {
         return enabled;
@@ -40,5 +41,13 @@ public class AppEmbeddingsProperties {
 
     public void setDimensions(int dimensions) {
         this.dimensions = dimensions;
+    }
+
+    public double getMaxDistance() {
+        return maxDistance;
+    }
+
+    public void setMaxDistance(double maxDistance) {
+        this.maxDistance = maxDistance;
     }
 }

@@ -158,7 +158,7 @@ fun NovaMemoriaSheet(
                     Text("DATA DO EVENTO", style = solarisText.meta, color = colors.texto)
                     Text(dataEvento?.let { formatarDataEvento(it) } ?: "Não informada", style = solarisText.corpo, color = colors.texto)
                 }
-                OutlineChip(text = if (dataEvento != null) "Alterar" else "Definir", onClick = { mostrarSeletorData = true })
+                MonoOutlineChip(text = if (dataEvento != null) "Alterar" else "Definir", onClick = { mostrarSeletorData = true })
             }
             if (dataEvento != null) {
                 Text(

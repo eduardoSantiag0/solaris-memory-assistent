@@ -25,11 +25,11 @@ import dev.solaris.memory.theme.solarisText
 
 private data class ComandoSugestao(val icon: SolarisIcon, val comando: String, val placeholder: String, val descricao: String)
 
+/** HANDOFF.md tela 03 (Correções 14/10 item 9): exatamente estes três — não existe /add-temp-sensitive no chat, só pela folha Nova memória. */
 private val COMANDOS = listOf(
     ComandoSugestao(SolarisIcon.PERMANENTE, "/add", "<texto>", "Memória permanente"),
     ComandoSugestao(SolarisIcon.TEMPORARIA, "/add-temp", "<dias> <texto>", "Temporária · sai das respostas depois do prazo"),
-    ComandoSugestao(SolarisIcon.SENSIVEL, "/add-sensitive", "<texto>", "Permanente · mascarada nas respostas"),
-    ComandoSugestao(SolarisIcon.SENSIVEL, "/add-temp-sensitive", "<dias> <texto>", "Temporária e mascarada"),
+    ComandoSugestao(SolarisIcon.SENSIVEL, "/add-sensitive", "<texto>", "Permanente e sensível · mascarada nas respostas"),
 )
 
 /** True while the composer field should show the command autocomplete (HANDOFF.md tela 03, RF-15). */

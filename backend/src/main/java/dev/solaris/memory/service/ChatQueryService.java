@@ -1,6 +1,7 @@
 package dev.solaris.memory.service;
 
 import dev.solaris.memory.domain.Memory;
+import dev.solaris.memory.domain.Sensitivity;
 import dev.solaris.memory.dto.ChatQueryRequest;
 import dev.solaris.memory.dto.ChatQueryResponse;
 import dev.solaris.memory.dto.SourceRef;
@@ -37,6 +38,21 @@ public class ChatQueryService {
             "em", "eu", "se", "me", "te", "lhe", "ou", "já", "tá"
     );
 
+    /**
+     * Correções 14/10 item 1 (RF-04/CT-05/CT-13): greetings and plain
+     * courtesy never consult memories, so "Oi" can never come back with an
+     * unrelated ficha just because it was the vector index's "least bad"
+     * match. Whole-message or lead-phrase matches only — a greeting that's
+     * also carrying a real question ("Oi, onde deixei a chave?") must still
+     * reach the search below.
+     */
+    private static final Set<String> CONVERSATIONAL_PHRASES = Set.of(
+            "oi", "ola", "olá", "oii", "opa", "alo", "alô", "e ai", "eai", "e aí",
+            "bom dia", "boa tarde", "boa noite",
+            "obrigado", "obrigada", "obrigadao", "obrigadão", "valeu", "agradecido", "agradecida",
+            "tudo bem", "tudo bom", "como vai", "blz", "beleza", "ok"
+    );
+
     private static final int SEMANTIC_RESULT_LIMIT = 5;
 
     private final MemoryRepository repository;
@@ -71,6 +87,10 @@ public class ChatQueryService {
     private ChatQueryResponse compute(String question) {
         Instant now = Instant.now(clock);
         String lower = question.toLowerCase();
+
+        if (isConversational(lower)) {
+            return ChatQueryResponse.conversational();
+        }
 
         var temporalWindow = temporalResolver.resolve(lower);
         if (temporalWindow.isPresent()) {
@@ -143,6 +163,27 @@ public class ChatQueryService {
     private record Scored(Memory memory, long score) {
     }
 
+    private boolean isConversational(String lowerQuestion) {
+        String cleaned = lowerQuestion.replaceAll("[¿?!.,;:]", "").trim();
+        if (cleaned.isEmpty()) {
+            return false;
+        }
+        if (CONVERSATIONAL_PHRASES.contains(cleaned)) {
+            return true;
+        }
+        for (String phrase : CONVERSATIONAL_PHRASES) {
+            if (cleaned.startsWith(phrase + " ")) {
+                String rest = cleaned.substring(phrase.length()).trim();
+                // Only filler after the greeting ("oi, tudo bem?") stays conversational;
+                // anything longer is treated as a real question riding along with it.
+                if (rest.isEmpty() || CONVERSATIONAL_PHRASES.contains(rest) || rest.length() <= 12) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private List<String> extractTerms(String lowerQuestion) {
         List<String> terms = new ArrayList<>();
         for (String raw : lowerQuestion.split("[^a-z0-9áàâãéêíóôõúüç]+")) {
@@ -153,23 +194,62 @@ public class ChatQueryService {
         return terms;
     }
 
+    /**
+     * Correções 14/10 item 5 (RF-13/CT-06): two or more candidates with
+     * different content are never silently resolved by picking the most
+     * recent one — the app asks instead, listing every distinct ficha, and
+     * never puts a sensitive one's literal content in that question (RNF-04
+     * masking has to hold here too, not just in the normal answer path).
+     */
     private ChatQueryResponse buildResponse(List<Memory> ranked, List<String> baseWarnings) {
         Memory best = ranked.get(0);
-        List<String> warnings = new ArrayList<>(baseWarnings);
 
-        boolean conflicting = ranked.stream().skip(1)
-                .anyMatch(m -> !m.getContent().equals(best.getContent()));
-        if (conflicting) {
-            warnings.add("Encontrei mais de uma memória relacionada com conteúdos diferentes; "
-                    + "a resposta usa a mais recente, especifique uma data para desambiguar.");
+        List<Memory> distinct = new ArrayList<>();
+        for (Memory m : ranked) {
+            if (distinct.stream().noneMatch(d -> d.getContent().equals(m.getContent()))) {
+                distinct.add(m);
+            }
         }
 
-        List<SourceRef> sources = ranked.stream()
-                .limit(3)
+        if (distinct.size() > 1) {
+            return buildConflictResponse(distinct);
+        }
+
+        List<SourceRef> sources = List.of(
+                new SourceRef(best.getId(), snippet(best.getContent()), best.getEventAt() != null ? best.getEventAt() : best.getCreatedAt(), best.getSensitivity()));
+        return new ChatQueryResponse(best.getContent(), sources, true, baseWarnings, false);
+    }
+
+    private ChatQueryResponse buildConflictResponse(List<Memory> unordered) {
+        List<Memory> distinct = new ArrayList<>(unordered);
+        distinct.sort(Comparator.comparing(
+                (Memory m) -> m.getEventAt() != null ? m.getEventAt() : m.getCreatedAt(),
+                Comparator.reverseOrder()));
+
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < distinct.size(); i++) {
+            Memory m = distinct.get(i);
+            String label = m.getSensitivity() == Sensitivity.SENSITIVE
+                    ? "um valor sensível"
+                    : "\"" + m.getContent().trim().replaceAll("\\.$", "") + "\"";
+            labels.add(i == 0 ? label + " (mais recente)" : label);
+        }
+
+        StringBuilder listed = new StringBuilder();
+        for (int i = 0; i < labels.size(); i++) {
+            if (i > 0) {
+                listed.append(i == labels.size() - 1 ? " e " : ", ");
+            }
+            listed.append(labels.get(i));
+        }
+
+        String answer = "Encontrei fichas diferentes sobre isso: " + listed + ". Qual vale?";
+
+        List<SourceRef> sources = distinct.stream()
                 .map(m -> new SourceRef(m.getId(), snippet(m.getContent()), m.getEventAt() != null ? m.getEventAt() : m.getCreatedAt(), m.getSensitivity()))
                 .toList();
 
-        return new ChatQueryResponse(best.getContent(), sources, true, warnings);
+        return new ChatQueryResponse(answer, sources, true, List.of(), true);
     }
 
     private String snippet(String content) {

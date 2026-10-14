@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.SolarisIconGlyph
@@ -86,6 +87,34 @@ fun OutlineChip(text: String, onClick: () -> Unit, icon: SolarisIcon? = null, mo
                 androidx.compose.foundation.layout.Spacer(Modifier.widthIn(min = 8.dp))
             }
             androidx.compose.material3.Text(text, style = solarisText.botao, color = colors.texto, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+/**
+ * Correções 14/10 item 8: the `.ob` style — mono 14/500, 1dp `filete`
+ * border, 44dp min touch target, icon to the left of the label. Separate
+ * from [OutlineChip] (sans/600, matches `.bs`) since the handoff uses both
+ * styles for different inline actions — Revelar/Ocultar and the date
+ * stepper's Definir/Alterar want this one, Testar/Importar estilo want `.bs`.
+ */
+@Composable
+fun MonoOutlineChip(text: String, onClick: () -> Unit, icon: SolarisIcon? = null, modifier: Modifier = Modifier) {
+    val colors = LocalSolarisColors.current
+    Box(
+        modifier = modifier
+            .height(MIN_TOUCH_TARGET)
+            .border(1.dp, colors.filete)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                SolarisIconGlyph(icon, colors.texto, size = 16.dp)
+                androidx.compose.foundation.layout.Spacer(Modifier.widthIn(min = 8.dp))
+            }
+            androidx.compose.material3.Text(text, style = solarisText.comando.copy(fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium), color = colors.texto, textAlign = TextAlign.Center)
         }
     }
 }
