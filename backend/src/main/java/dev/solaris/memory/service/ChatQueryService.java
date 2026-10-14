@@ -166,7 +166,7 @@ public class ChatQueryService {
 
         List<SourceRef> sources = ranked.stream()
                 .limit(3)
-                .map(m -> new SourceRef(m.getId(), snippet(m.getContent()), m.getEventAt() != null ? m.getEventAt() : m.getCreatedAt()))
+                .map(m -> new SourceRef(m.getId(), snippet(m.getContent()), m.getEventAt() != null ? m.getEventAt() : m.getCreatedAt(), m.getSensitivity()))
                 .toList();
 
         return new ChatQueryResponse(best.getContent(), sources, true, warnings);

@@ -34,6 +34,7 @@ fun MemoryCardFonte(
     dataHora: String,
     conteudo: String,
     modifier: Modifier = Modifier,
+    sensivel: Boolean = false,
     stamp: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
@@ -51,7 +52,11 @@ fun MemoryCardFonte(
                 Text("FICHA Nº $numero", style = solarisText.meta, color = colors.texto)
                 Text(dataHora, style = solarisText.meta, color = colors.textoSecundario)
             }
-            Text(conteudo, style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(top = 8.dp))
+            if (sensivel) {
+                MaskedValue(conteudo, modifier = Modifier.padding(top = 8.dp))
+            } else {
+                Text(conteudo, style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(top = 8.dp))
+            }
             if (stamp != null) {
                 Box(Modifier.padding(top = 8.dp)) { stamp() }
             }
@@ -76,6 +81,7 @@ fun MemoryCardItem(
     conteudo: String,
     modifier: Modifier = Modifier,
     expirada: Boolean = false,
+    sensivel: Boolean = false,
     stamps: @Composable () -> Unit = {},
     onClick: (() -> Unit)? = null,
 ) {
@@ -98,13 +104,17 @@ fun MemoryCardItem(
             Text("Nº $numero", style = solarisText.meta, color = colors.texto)
             stamps()
         }
-        Text(
-            conteudo,
-            style = solarisText.corpo,
-            color = colors.texto,
-            textDecoration = if (expirada) TextDecoration.LineThrough else null,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        if (sensivel) {
+            MaskedValue(conteudo, modifier = Modifier.padding(top = 8.dp))
+        } else {
+            Text(
+                conteudo,
+                style = solarisText.corpo,
+                color = colors.texto,
+                textDecoration = if (expirada) TextDecoration.LineThrough else null,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
         Text(dataHora, style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 8.dp))
     }
 }

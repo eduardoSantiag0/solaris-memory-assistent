@@ -17,7 +17,7 @@ import kotlinx.datetime.toLocalDateTime
 
 enum class ChatRole { USER, ASSISTANT }
 
-data class ChatEntry(val role: ChatRole, val text: String, val horario: String, val caption: String? = null)
+data class ChatEntry(val role: ChatRole, val text: String, val horario: String, val caption: String? = null, val sensivel: Boolean = false)
 
 private fun agora(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -192,8 +192,10 @@ class AppViewModel(private val settings: AppSettings) {
                 }
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())
-                    val caption = response.sources.firstOrNull()?.let { "fonte: ${it.date}" }
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), caption)
+                    val melhorFonte = response.sources.firstOrNull()
+                    val caption = melhorFonte?.let { "fonte: ${it.date}" }
+                    val sensivel = melhorFonte?.sensitivity == "SENSITIVE"
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), caption, sensivel)
                     response.warnings.forEach { warning ->
                         chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "aviso: $warning", agora())
                     }

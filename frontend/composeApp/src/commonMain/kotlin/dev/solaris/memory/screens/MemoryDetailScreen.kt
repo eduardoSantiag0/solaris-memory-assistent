@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.components.ConfirmDialog
 import dev.solaris.memory.components.DangerButton
+import dev.solaris.memory.components.MaskedValue
 import dev.solaris.memory.components.SecondaryButton
 import dev.solaris.memory.components.Stamp
 import dev.solaris.memory.components.StampType
@@ -35,10 +36,16 @@ fun MemoryDetailScreen(memory: MemoryResponse, onExcluido: () -> Unit) {
     MemoryDetailContent(memory) { confirmandoExclusao = true }
 
     if (confirmandoExclusao) {
-        val inicio = memory.content.take(40).let { if (memory.content.length > 40) "$it..." else it }
+        val sensivel = memory.sensitivity == "SENSITIVE"
+        val texto = if (sensivel) {
+            "Este item sensível sai das buscas na hora. Não dá para desfazer."
+        } else {
+            val inicio = memory.content.take(40).let { if (memory.content.length > 40) "$it..." else it }
+            "“$inicio” sai das buscas na hora. Não dá para desfazer."
+        }
         ConfirmDialog(
             titulo = "Excluir esta ficha?",
-            texto = "“$inicio” sai das buscas na hora. Não dá para desfazer.",
+            texto = texto,
             confirmarLabel = "Excluir",
             onConfirmar = { confirmandoExclusao = false; onExcluido() },
             onCancelar = { confirmandoExclusao = false },
@@ -51,6 +58,7 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
     val colors = LocalSolarisColors.current
     val isTemporaria = memory.expiresAt != null
     val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
+    val isSensivel = memory.sensitivity == "SENSITIVE"
 
     Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(16.dp)) {
         Box {
@@ -63,15 +71,25 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("TEXTO REGISTRADO", style = solarisText.meta, color = colors.textoSecundario)
-                    Stamp(
-                        when {
-                            isVencida -> StampType.VENCIDA
-                            isTemporaria -> StampType.TEMPORARIA
-                            else -> StampType.PERMANENTE
-                        },
-                    )
+                    Row {
+                        Stamp(
+                            when {
+                                isVencida -> StampType.VENCIDA
+                                isTemporaria -> StampType.TEMPORARIA
+                                else -> StampType.PERMANENTE
+                            },
+                        )
+                        if (isSensivel) {
+                            Spacer(Modifier.width(6.dp))
+                            Stamp(StampType.SENSIVEL)
+                        }
+                    }
                 }
-                Text(memory.content, style = solarisText.destaqueFicha, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                if (isSensivel) {
+                    MaskedValue(memory.content, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                } else {
+                    Text(memory.content, style = solarisText.destaqueFicha, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                }
             }
             Box(
                 modifier = Modifier

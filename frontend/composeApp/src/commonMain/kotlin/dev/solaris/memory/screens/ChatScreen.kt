@@ -19,6 +19,7 @@ import dev.solaris.memory.ChatRole
 import dev.solaris.memory.components.AssistantMessageBody
 import dev.solaris.memory.components.AssistantMessageMeta
 import dev.solaris.memory.components.Composer
+import dev.solaris.memory.components.MaskedValue
 import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.theme.LocalSolarisColors
@@ -55,7 +56,11 @@ fun ChatScreen(viewModel: AppViewModel) {
                         ChatRole.USER -> UserMessage(entry.text)
                         ChatRole.ASSISTANT -> Column {
                             AssistantMessageMeta(entry.horario)
-                            AssistantMessageBody(entry.text, modifier = Modifier.padding(top = 2.dp))
+                            if (entry.sensivel) {
+                                MaskedValue(entry.text, modifier = Modifier.padding(top = 2.dp))
+                            } else {
+                                AssistantMessageBody(entry.text, modifier = Modifier.padding(top = 2.dp))
+                            }
                             if (entry.caption != null) {
                                 AssistantMessageMeta(entry.caption, modifier = Modifier.padding(top = 2.dp))
                             }

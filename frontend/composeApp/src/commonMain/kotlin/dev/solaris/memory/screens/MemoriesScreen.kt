@@ -113,11 +113,13 @@ private fun FiltroTab(label: String, active: Boolean, onClick: () -> Unit) {
 @Composable
 private fun MemoryRow(memory: MemoryResponse, onAbrirDetalhe: (String) -> Unit, expirada: Boolean = false) {
     val numero = memory.id.takeLast(4).uppercase()
+    val sensivel = memory.sensitivity == "SENSITIVE"
     MemoryCardItem(
         numero = numero,
         dataHora = formatarDataHora(memory.createdAt),
         conteudo = memory.content,
         expirada = expirada,
+        sensivel = sensivel,
         stamps = {
             Row {
                 if (expirada) {
@@ -126,6 +128,10 @@ private fun MemoryRow(memory: MemoryResponse, onAbrirDetalhe: (String) -> Unit, 
                     Stamp(StampType.TEMPORARIA, detail = remainingLabel(memory.expiresAt))
                 } else {
                     Stamp(StampType.PERMANENTE)
+                }
+                if (sensivel) {
+                    Spacer(Modifier.width(6.dp))
+                    Stamp(StampType.SENSIVEL)
                 }
             }
         },

@@ -52,7 +52,7 @@ data class PageResponse<T>(
 data class ChatQueryRequest(val question: String, val clientRequestId: String? = null)
 
 @Serializable
-data class SourceRef(val id: String, val snippet: String, val date: String)
+data class SourceRef(val id: String, val snippet: String, val date: String, val sensitivity: String? = null)
 
 @Serializable
 data class ChatQueryResponse(
