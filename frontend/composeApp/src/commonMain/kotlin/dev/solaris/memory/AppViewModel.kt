@@ -26,7 +26,6 @@ data class ChatEntry(
     val horario: String,
     /** Correções 14/10 item 7: data (yyyy-MM-dd) por entrada, só para decidir quando desenhar o separador "— dd/mm/aaaa —" entre turnos de dias diferentes. */
     val data: String = hojeData(),
-    val sensivel: Boolean = false,
     /** HANDOFF.md v1.1 "Linha de fonte" — presente só nas respostas a perguntas, não nas confirmações de gravação. */
     val fonte: SourceRef? = null,
     /** Correções 14/10 item 5 — não-vazio só na resposta de conflito: uma SourceLink por ficha, `text` já é a frase inteira ("... Qual vale?"), nunca embrulhada de novo. */
@@ -295,8 +294,7 @@ class AppViewModel(private val settings: AppSettings) {
                         return
                     }
                     val melhorFonte = response.sources.firstOrNull()
-                    val sensivel = melhorFonte?.sensitivity == "SENSITIVE"
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), sensivel = sensivel, fonte = melhorFonte)
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), fonte = melhorFonte)
                     // HANDOFF.md 5.5: nunca prefixar com rótulos técnicos como "aviso:".
                     response.warnings.forEach { warning ->
                         chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, warning, agora())

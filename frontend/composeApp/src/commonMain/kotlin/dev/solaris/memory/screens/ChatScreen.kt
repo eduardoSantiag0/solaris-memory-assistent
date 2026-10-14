@@ -22,7 +22,6 @@ import dev.solaris.memory.components.AssistantMessageBody
 import dev.solaris.memory.components.AssistantMessageMeta
 import dev.solaris.memory.components.ComandoAutocomplete
 import dev.solaris.memory.components.Composer
-import dev.solaris.memory.components.MaskedValue
 import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SavedMessage
 import dev.solaris.memory.components.SourceLink
@@ -84,9 +83,10 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                                 val fonte = entry.fonte
                                 if (entry.salva) {
                                     SavedMessage(entry.text)
-                                } else if (entry.sensivel) {
-                                    MaskedValue(entry.text, viewModel)
                                 } else {
+                                    // Pedido explícito do usuário: respostas sensíveis aparecem
+                                    // na conversa como texto normal, sem máscara nem gate de
+                                    // biometria/senha — essa proteção fica só em Memórias/Detalhe.
                                     AssistantMessageBody(respostaConversacional(entry.text, fonte))
                                 }
                                 if (entry.fontesConflito.isNotEmpty()) {

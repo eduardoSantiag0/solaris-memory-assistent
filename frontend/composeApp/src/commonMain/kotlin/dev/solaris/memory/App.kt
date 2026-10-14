@@ -12,7 +12,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,26 +32,6 @@ import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisTheme
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
-
-/**
- * Correções 14/10 item 3: cabeçalho, abas, conversa e compositor vivem numa
- * coluna de no máximo 560dp, centralizada — o alvo principal continua
- * sendo Android em retrato (390dp, bem abaixo do limite, então nada muda
- * lá); fora da coluna, em telas largas (desktop, tablet), só o fundo.
- */
-@Composable
-private fun CenteredShell(fundo: Color, content: @Composable ColumnScope.() -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().background(fundo)) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .widthIn(max = 560.dp)
-                .fillMaxWidth()
-                .align(Alignment.TopCenter),
-            content = content,
-        )
-    }
-}
 
 private sealed class SubScreen {
     object None : SubScreen()
@@ -87,7 +66,7 @@ fun App() {
         }
 
         if (!viewModel.isLoggedIn) {
-            CenteredShell(colors.fundo) {
+            Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
                 Box(modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 56.dp).padding(16.dp), contentAlignment = Alignment.Center) {
                     Text(
                         "Solaris",
@@ -100,7 +79,7 @@ fun App() {
             return@SolarisTheme
         }
 
-        CenteredShell(colors.fundo) {
+        Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
             val subAtual = sub
             val memoriaDetalhe = (subAtual as? SubScreen.Detalhe)?.let { d -> viewModel.memories.find { it.id == d.memoriaId } }
 
