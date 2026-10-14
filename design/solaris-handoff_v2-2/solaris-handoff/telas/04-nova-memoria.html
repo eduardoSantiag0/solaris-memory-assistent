@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova memória</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.tx{background-image:conic-gradient(rgba(23,38,33,0.05) 25%,transparent 0 50%,rgba(23,38,33,0.05) 0 75%,transparent 0);background-size:4px 4px}
+a{color:#172621}a:hover{color:#995F4C}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px;color:#172621}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.hd{height:56px;flex-shrink:0;box-sizing:border-box;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 8px 0 20px;border-bottom:1px solid #CFCBBE}
+.brand{margin:0;font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:400;letter-spacing:3px;color:#3f5045}
+.ib{width:44px;height:44px;flex-shrink:0;box-sizing:border-box;border:1px solid transparent;background:transparent;color:#172621;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0;text-decoration:none}
+.ibb{background:#DDD9CB}
+.send{width:44px;height:44px;flex-shrink:0;border:0;background:#995F4C;color:#E8E5D8;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.in{flex-grow:1;min-width:0;height:44px;box-sizing:border-box;border:0;border-bottom:2px solid #172621;border-radius:0;padding:0 14px;font-size:16px;font-family:'IBM Plex Sans',sans-serif;background:#F3F1E8;color:#172621}
+.in::placeholder{color:rgba(23,38,33,0.42)}
+.cmp{flex-shrink:0;border-top:1px solid #CFCBBE;padding:12px 16px 18px;display:flex;gap:10px}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #995F4C;outline-offset:2px}
+.ub{align-self:flex-end;max-width:78%;background:#B8A47B;color:#172621;padding:12px 14px;font-size:16px;line-height:1.5}
+.ans{display:flex;flex-direction:column;gap:8px;max-width:94%;font-size:16px;line-height:1.5}
+.src{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:44px;margin:-10px 0 -12px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px;color:#3f5045;text-decoration:underline dotted;text-underline-offset:4px}
+.src:hover{color:#172621}
+.tab{position:absolute;left:0;width:30px;box-sizing:border-box;padding:16px 0;display:flex;align-items:center;justify-content:center;gap:10px;writing-mode:vertical-rl;transform:rotate(180deg);background:#F3F1E8;border:1px solid #172621;border-right:0;color:#172621;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2px;z-index:2}
+.tab::after{content:'';position:absolute;top:-8px;bottom:-8px;left:-14px;right:0}
+.tab-on{background:#B8A47B;color:#172621}
+.ob{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:#172621;background:transparent;border:1px solid #172621;min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border-radius:0;text-decoration:none}
+.bp{min-height:48px;border:0;border-radius:0;background:#172621;color:#E8E5D8;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bs{min-height:48px;border:1px solid #172621;border-radius:0;background:transparent;color:#172621;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bd{min-height:48px;border:0;border-radius:0;background:#995F4C;color:#FFFFFF;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bd:hover{color:#FFFFFF}
+.ficha{display:block;text-decoration:none;color:#172621;background:#F3F1E8;border:0}
+.ficha:hover{color:#172621}
+.fh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px dashed #A9A596}
+.stamp{font-family:'IBM Plex Mono',monospace;font-size:12px;display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:0;background:#DCE2D8;color:#172621}
+.stamp-a{background:#EEDCD3}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.bar{display:block;position:relative;height:1px;background:#C9C6B8;overflow:hidden}
+.bar span{position:absolute;top:0;left:0;height:1px;width:30%;background:#172621;animation:bar 1.6s ease-in-out infinite alternate}
+.sn{flex-shrink:0;display:flex;gap:24px;padding:0 20px;height:46px;box-sizing:border-box;border-bottom:1px solid #CFCBBE}
+.sni{display:flex;align-items:center;gap:8px;font-size:15px;color:#3f5045;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.sni[aria-current]{color:#172621;font-weight:600;border-bottom-color:#995F4C}
+.cnt{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;padding:1px 6px;background:#DDD9CB;color:#172621}
+@keyframes bar{from{left:0}to{left:70%}}
+@media (prefers-reduced-motion: reduce){.bar span{animation:none}}
+.rc{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;padding:12px 14px;border:1px solid #172621;cursor:pointer;color:#172621;font-family:'IBM Plex Sans',sans-serif;border-radius:0;min-height:60px;box-sizing:border-box}
+.dot{width:14px;height:14px;border:1px solid #172621;border-radius:50%;flex-shrink:0;margin-top:4px;box-sizing:border-box}
+.chk{appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:0;border:1px solid #172621;background:#F3F1E8;flex-shrink:0;cursor:pointer}
+.chk:checked{background:#172621;box-shadow:inset 0 0 0 4px #F3F1E8}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E8E5D8; color: #172621; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: relative">
+<header class="hd" style="border-bottom: 0">
+<span class="meta" style="justify-self: start; display: inline-flex; align-items: center; gap: 8px"><span style="width: 7px; height: 7px; background: #566C5B"></span>VPN · OK</span>
+<h1 class="brand">Solaris</h1>
+<a href="08-ajustes.html" class="ib" aria-label="Ajustes" style="justify-self: end"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.33946 17.0002C2.90721 16.2515 2.58277 15.4702 2.36133 14.6741C3.3338 14.1779 3.99972 13.1668 3.99972 12.0002C3.99972 10.8345 3.3348 9.824 2.36353 9.32741C2.81025 7.71651 3.65857 6.21627 4.86474 4.99001C5.7807 5.58416 6.98935 5.65534 7.99972 5.072C9.01009 4.48866 9.55277 3.40635 9.4962 2.31604C11.1613 1.8846 12.8847 1.90004 14.5031 2.31862C14.4475 3.40806 14.9901 4.48912 15.9997 5.072C17.0101 5.65532 18.2187 5.58416 19.1346 4.99007C19.7133 5.57986 20.2277 6.25151 20.66 7.00021C21.0922 7.7489 21.4167 8.53025 21.6381 9.32628C20.6656 9.82247 19.9997 10.8336 19.9997 12.0002C19.9997 13.166 20.6646 14.1764 21.6359 14.673C21.1892 16.2839 20.3409 17.7841 19.1347 19.0104C18.2187 18.4163 17.0101 18.3451 15.9997 18.9284C14.9893 19.5117 14.4467 20.5941 14.5032 21.6844C12.8382 22.1158 11.1148 22.1004 9.49633 21.6818C9.55191 20.5923 9.00929 19.5113 7.99972 18.9284C6.98938 18.3451 5.78079 18.4162 4.86484 19.0103C4.28617 18.4205 3.77172 17.7489 3.33946 17.0002ZM8.99972 17.1964C10.0911 17.8265 10.8749 18.8227 11.2503 19.9659C11.7486 20.0133 12.2502 20.014 12.7486 19.9675C13.1238 18.8237 13.9078 17.8268 14.9997 17.1964C16.0916 16.5659 17.347 16.3855 18.5252 16.6324C18.8146 16.224 19.0648 15.7892 19.2729 15.334C18.4706 14.4373 17.9997 13.2604 17.9997 12.0002C17.9997 10.74 18.4706 9.5632 19.2729 8.6665C19.1688 8.4405 19.0538 8.21822 18.9279 8.00021C18.802 7.78219 18.667 7.57148 18.5233 7.36842C17.3457 7.61476 16.0911 7.43414 14.9997 6.80405C13.9083 6.17395 13.1246 5.17768 12.7491 4.03455C12.2509 3.98714 11.7492 3.98646 11.2509 4.03292C10.8756 5.17671 10.0916 6.17364 8.99972 6.80405C7.9078 7.43447 6.65245 7.61494 5.47428 7.36803C5.18485 7.77641 4.93463 8.21117 4.72656 8.66637C5.52881 9.56311 5.99972 10.74 5.99972 12.0002C5.99972 13.2604 5.52883 14.4372 4.72656 15.3339C4.83067 15.5599 4.94564 15.7822 5.07152 16.0002C5.19739 16.2182 5.3324 16.4289 5.47612 16.632C6.65377 16.3857 7.90838 16.5663 8.99972 17.1964ZM11.9997 15.0002C10.3429 15.0002 8.99972 13.6571 8.99972 12.0002C8.99972 10.3434 10.3429 9.00021 11.9997 9.00021C13.6566 9.00021 14.9997 10.3434 14.9997 12.0002C14.9997 13.6571 13.6566 15.0002 11.9997 15.0002ZM11.9997 13.0002C12.552 13.0002 12.9997 12.5525 12.9997 12.0002C12.9997 11.4479 12.552 11.0002 11.9997 11.0002C11.4474 11.0002 10.9997 11.4479 10.9997 12.0002C10.9997 12.5525 11.4474 13.0002 11.9997 13.0002Z"/></svg></a>
+</header>
+<nav class="sn" aria-label="Seções"><a href="02-chat.html" class="sni" aria-current="page">Conversa</a><a href="05-memorias.html" class="sni">Memórias <span class="cnt">14</span></a></nav>
+<div style="flex-grow: 1; padding: 24px 20px 24px 20px; display: flex; flex-direction: column; gap: 12px">
+<div class="ub">Qual é meu RG?</div>
+</div>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(23,38,33,0.55); z-index: 3"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="nm-t" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; background: #E8E5D8; border-top: 1px solid #172621; padding: 10px 20px 22px; display: flex; flex-direction: column; gap: 16px">
+<div aria-hidden="true" style="align-self: center; width: 40px; height: 3px; background: #172621"></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 id="nm-t" class="mono" style="margin: 0; font-size: 17px; font-weight: 600; letter-spacing: .5px">Nova memória</h2>
+<a href="02-chat.html" class="ib" aria-label="Fechar" style="margin-right: -12px"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+</div>
+<div role="radiogroup" aria-label="Tipo de memória" style="display: flex; flex-direction: column; gap: 8px">
+<button class="rc" role="radio" aria-checked="false" style="background: transparent">
+<span class="dot" style="background: transparent"></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 16px; font-weight: 600">Permanente</b><span style="font-size: 14px">Fica até você excluir.</span></span>
+</button>
+<button class="rc" role="radio" aria-checked="true" style="background: #B8A47B">
+<span class="dot" style="background: #172621"></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 16px; font-weight: 600">Temporária</b><span style="font-size: 14px">Sai das respostas depois do prazo.</span></span>
+</button>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #CFCBBE; border-bottom: 1px solid #CFCBBE; padding: 12px 0">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px"><span class="meta">VALE POR</span><span style="font-size: 14px">até 15/10, 21:40</span></div>
+<button class="ib ibb" aria-label="Menos um dia"><svg class="ln" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+<span class="mono" aria-live="polite" style="min-width: 74px; text-align: center; font-size: 17px; font-weight: 600">2 dias</span>
+<button class="ib ibb" aria-label="Mais um dia"><svg class="ln" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="nm-txt" class="meta">O QUE VOCÊ QUER LEMBRAR?</label>
+<textarea id="nm-txt" rows="3" style="box-sizing: border-box; width: 100%; resize: none; border: 0; border-bottom: 2px solid #172621; border-radius: 0; background: #F3F1E8; color: #172621; padding: 12px 14px; font-size: 16px; line-height: 1.5; font-family: 'IBM Plex Sans', sans-serif">Deixei a chave do carro na gaveta da cozinha.</textarea>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<span style="display: flex; flex-direction: column; gap: 4px"><span class="meta">DATA DO EVENTO</span><span style="font-size: 14px">Não informada</span></span>
+<button class="ob" style="font-size: 14px">Definir</button>
+</div>
+<label style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px; cursor: pointer"><input class="chk" type="checkbox"><span style="display: flex; flex-direction: column; gap: 2px"><span>Marcar como sensível</span><span class="meta">MASCARADA NAS RESPOSTAS</span></span></label>
+<button class="bp" style="width: 100%; min-height: 52px">Salvar memória</button>
+<div class="meta" style="text-align: center">Equivale a <b style="font-weight: 600">/add-temp 2</b> no chat</div>
+</section>
+</div>
+</body>
+</html>

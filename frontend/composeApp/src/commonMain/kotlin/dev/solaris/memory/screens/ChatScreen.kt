@@ -27,6 +27,7 @@ import dev.solaris.memory.components.SavedMessage
 import dev.solaris.memory.components.SourceLink
 import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.components.deveMostrarAutocomplete
+import dev.solaris.memory.components.ditherConversa
 import dev.solaris.memory.network.SourceRef
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.solarisText
@@ -59,9 +60,10 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                 .background(colors.fundo)
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth().ditherConversa(colors.textura)) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(28.dp),
             ) {
                 itemsIndexed(viewModel.chatHistory) { index, entry ->
@@ -106,6 +108,7 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                         }
                     }
                 }
+            }
             }
 
             if (deveMostrarAutocomplete(input)) {

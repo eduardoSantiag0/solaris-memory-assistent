@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abertura</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B8A47B}a:hover{color:#E8E5D8}
+.bar{display:block;position:relative;width:160px;height:1px;background:#566C5B;overflow:hidden}
+.bar span{position:absolute;top:0;left:0;height:1px;width:30%;background:#B8A47B;animation:bar 1.6s ease-in-out infinite alternate}
+@keyframes bar{from{left:0}to{left:70%}}
+@media (prefers-reduced-motion: reduce){.bar span{animation:none}}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #172621; color: #E8E5D8; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 64px 32px 48px">
+
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px">
+<img src="../assets/reflexo.gif" width="256" height="192" alt="Planeta sobre o oceano, com o reflexo ondulando, em pixel art" style="image-rendering: pixelated; display: block">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+<h1 style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 500; letter-spacing: 2px">solaris</h1>
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 3px; color: #B8A47B">MEMORY-ASSISTENT</div>
+</div>
+<p style="margin: 0; max-width: 260px; text-align: center; font-size: 16px; line-height: 1.5">Lembra só o que você registrou.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%">
+<span class="bar" aria-hidden="true"><span></span></span>
+<div role="status" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 1px">CONECTANDO AO SERVIDOR PRIVADO</div>
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #B8A47B">via WireGuard · nada sai do seu servidor</div>
+</div>
+
+</div>
+</body>
+</html>

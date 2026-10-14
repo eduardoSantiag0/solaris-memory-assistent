@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajustes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.tx{background-image:conic-gradient(rgba(23,38,33,0.05) 25%,transparent 0 50%,rgba(23,38,33,0.05) 0 75%,transparent 0);background-size:4px 4px}
+a{color:#172621}a:hover{color:#995F4C}
+.mono{font-family:'IBM Plex Mono',monospace}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px;color:#172621}
+.ln{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:square;flex-shrink:0}
+.hd{height:56px;flex-shrink:0;box-sizing:border-box;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 8px 0 20px;border-bottom:1px solid #CFCBBE}
+.brand{margin:0;font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:400;letter-spacing:3px;color:#3f5045}
+.ib{width:44px;height:44px;flex-shrink:0;box-sizing:border-box;border:1px solid transparent;background:transparent;color:#172621;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0;text-decoration:none}
+.ibb{background:#DDD9CB}
+.send{width:44px;height:44px;flex-shrink:0;border:0;background:#995F4C;color:#E8E5D8;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0;padding:0}
+.in{flex-grow:1;min-width:0;height:44px;box-sizing:border-box;border:0;border-bottom:2px solid #172621;border-radius:0;padding:0 14px;font-size:16px;font-family:'IBM Plex Sans',sans-serif;background:#F3F1E8;color:#172621}
+.in::placeholder{color:rgba(23,38,33,0.42)}
+.cmp{flex-shrink:0;border-top:1px solid #CFCBBE;padding:12px 16px 18px;display:flex;gap:10px}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #995F4C;outline-offset:2px}
+.ub{align-self:flex-end;max-width:78%;background:#B8A47B;color:#172621;padding:12px 14px;font-size:16px;line-height:1.5}
+.ans{display:flex;flex-direction:column;gap:8px;max-width:94%;font-size:16px;line-height:1.5}
+.src{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:44px;margin:-10px 0 -12px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.4px;color:#3f5045;text-decoration:underline dotted;text-underline-offset:4px}
+.src:hover{color:#172621}
+.tab{position:absolute;left:0;width:30px;box-sizing:border-box;padding:16px 0;display:flex;align-items:center;justify-content:center;gap:10px;writing-mode:vertical-rl;transform:rotate(180deg);background:#F3F1E8;border:1px solid #172621;border-right:0;color:#172621;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2px;z-index:2}
+.tab::after{content:'';position:absolute;top:-8px;bottom:-8px;left:-14px;right:0}
+.tab-on{background:#B8A47B;color:#172621}
+.ob{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:#172621;background:transparent;border:1px solid #172621;min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border-radius:0;text-decoration:none}
+.bp{min-height:48px;border:0;border-radius:0;background:#172621;color:#E8E5D8;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bs{min-height:48px;border:1px solid #172621;border-radius:0;background:transparent;color:#172621;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bd{min-height:48px;border:0;border-radius:0;background:#995F4C;color:#FFFFFF;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.bd:hover{color:#FFFFFF}
+.ficha{display:block;text-decoration:none;color:#172621;background:#F3F1E8;border:0}
+.ficha:hover{color:#172621}
+.fh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px dashed #A9A596}
+.stamp{font-family:'IBM Plex Mono',monospace;font-size:12px;display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:0;background:#DCE2D8;color:#172621}
+.stamp-a{background:#EEDCD3}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.bar{display:block;position:relative;height:1px;background:#C9C6B8;overflow:hidden}
+.bar span{position:absolute;top:0;left:0;height:1px;width:30%;background:#172621;animation:bar 1.6s ease-in-out infinite alternate}
+.sn{flex-shrink:0;display:flex;gap:24px;padding:0 20px;height:46px;box-sizing:border-box;border-bottom:1px solid #CFCBBE}
+.sni{display:flex;align-items:center;gap:8px;font-size:15px;color:#3f5045;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.sni[aria-current]{color:#172621;font-weight:600;border-bottom-color:#995F4C}
+.cnt{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;padding:1px 6px;background:#DDD9CB;color:#172621}
+@keyframes bar{from{left:0}to{left:70%}}
+@media (prefers-reduced-motion: reduce){.bar span{animation:none}}
+.sec{display:flex;flex-direction:column;border-top:1px solid #CFCBBE;padding-top:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;font-size:15px}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;font-size:15px;cursor:pointer}
+.sw{appearance:none;-webkit-appearance:none;width:40px;height:22px;margin:0;border:1px solid #172621;background:#F3F1E8;flex-shrink:0;cursor:pointer;position:relative}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;background:#4a5d4f}
+.sw:checked{background:#172621}
+.sw:checked::after{left:21px;background:#B8A47B}
+.ok{font-family:'IBM Plex Mono',monospace;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.ok::before{content:'';width:7px;height:7px;background:#566C5B}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E8E5D8; color: #172621; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: relative">
+<header class="hd" style="padding-left: 8px">
+<a href="02-chat.html" class="ib" aria-label="Voltar" style="justify-self: start"><svg class="ln" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 7l-5 5 5 5"/></svg></a>
+<h1 class="brand" style="font-size: 16px; letter-spacing: 2px">Ajustes</h1>
+<span style="width: 44px; justify-self: end"></span>
+</header>
+<main style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 22px">
+<section class="sec" aria-labelledby="s1" style="border-top: 0; padding-top: 0">
+<h2 id="s1" class="meta" style="margin: 0 0 6px; font-weight: 600">CONEXÃO</h2>
+<div class="row"><span>VPN · WireGuard</span><span class="ok">CONECTADA</span></div>
+<div class="row"><span>Servidor (API)</span><span class="ok">OK</span></div>
+<div class="row"><span>Modelo local</span><span class="ok">PRONTO</span></div>
+<div style="display: flex; gap: 10px; margin-top: 10px">
+<label for="srv" class="sr">Endereço do servidor</label>
+<input id="srv" type="text" value="[ENDEREÇO DO SERVIDOR]" style="flex-grow: 1; min-width: 0; height: 44px; box-sizing: border-box; border: 0; border-bottom: 2px solid #172621; border-radius: 0; padding: 0 12px; font-size: 14px; font-family: 'IBM Plex Mono', monospace; background: #F3F1E8; color: #172621">
+<button class="bs" style="min-height: 44px; padding: 0 16px; font-size: 15px">Testar</button>
+</div>
+</section>
+<section class="sec" aria-labelledby="s2">
+<h2 id="s2" class="meta" style="margin: 0; font-weight: 600">APARÊNCIA</h2>
+<a href="09-aparencia.html" class="opt" style="text-decoration: none; color: #172621; min-height: 60px">
+<span style="display: flex; flex-direction: column; gap: 4px"><span>Tema, paleta e estilos</span><span class="meta">ESTAÇÃO · SEGUIR O ANDROID</span></span>
+<span style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="display: flex; border: 1px solid #172621"><span style="width: 12px; height: 18px; background: #172621"></span><span style="width: 12px; height: 18px; background: #566C5B"></span><span style="width: 12px; height: 18px; background: #E8E5D8"></span><span style="width: 12px; height: 18px; background: #B8A47B"></span><span style="width: 12px; height: 18px; background: #995F4C"></span></span><svg class="ln" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+</a>
+</section>
+<section class="sec" aria-labelledby="s3">
+<h2 id="s3" class="meta" style="margin: 0; font-weight: 600">PRIVACIDADE</h2>
+<label class="opt"><span>Pedir biometria ao abrir</span><input class="sw" type="checkbox" role="switch" checked></label>
+<label class="opt"><span>Mascarar dados sensíveis</span><input class="sw" type="checkbox" role="switch" checked></label>
+<label class="opt"><span style="display: flex; flex-direction: column; gap: 2px"><span>Ocultar de novo depois de</span><span class="meta">30 SEGUNDOS</span></span><input class="sw" type="checkbox" role="switch" checked></label>
+<label class="opt"><span>Bloquear capturas de tela</span><input class="sw" type="checkbox" role="switch" checked></label>
+<label class="opt"><span>Mostrar texto nas notificações</span><input class="sw" type="checkbox" role="switch"></label>
+</section>
+<div style="flex-grow: 1"></div>
+<section aria-label="Dados e sessão" style="display: flex; gap: 12px">
+<button class="bs" style="flex: 1 1 0; font-size: 15px">Limpar cache</button>
+<button class="bs" style="flex: 1 1 0; font-size: 15px; border-color: #995F4C; color: #7a4434">Encerrar sessão</button>
+</section>
+</main>
+</div>
+</body>
+</html>
