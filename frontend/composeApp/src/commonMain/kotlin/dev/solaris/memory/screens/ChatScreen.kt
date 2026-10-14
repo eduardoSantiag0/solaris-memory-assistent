@@ -25,10 +25,14 @@ import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SourceLink
 import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.components.deveMostrarAutocomplete
+import dev.solaris.memory.network.SourceRef
 import dev.solaris.memory.theme.LocalSolarisColors
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 @Composable
@@ -62,12 +66,12 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                         ChatRole.USER -> UserMessage(entry.text)
                         ChatRole.ASSISTANT -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             AssistantMessageMeta(entry.horario)
+                            val fonte = entry.fonte
                             if (entry.sensivel) {
                                 MaskedValue(entry.text, viewModel)
                             } else {
-                                AssistantMessageBody(entry.text)
+                                AssistantMessageBody(respostaConversacional(entry.text, fonte))
                             }
-                            val fonte = entry.fonte
                             if (fonte != null) {
                                 SourceLink(
                                     texto = "FICHA ${fonte.id.takeLast(4).uppercase()} · ${formatarDataHoraCurta(fonte.date)}",
@@ -118,6 +122,33 @@ private fun formatarDataHoraCurta(iso: String): String = try {
     val dt = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
     "${dt.dayOfMonth.toString().padStart(2, '0')}/${dt.monthNumber.toString().padStart(2, '0')} · " +
         "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+} catch (e: Exception) {
+    iso
+}
+
+/**
+ * Embrulha o texto literal da memória numa frase de conversa, sem
+ * inventar nem resumir nada — RF-04/CT-05/CT-11 continuam garantidos pelo
+ * backend (chat/query sempre devolve o conteúdo bruto); isso só adiciona
+ * a moldura "..., segundo o que você registrou ontem às 21:40." que a
+ * tela 02 do handoff v1.1 já mostra como exemplo.
+ */
+private fun respostaConversacional(texto: String, fonte: SourceRef?): String {
+    if (fonte == null) return texto
+    val base = texto.trimEnd().removeSuffix(".")
+    return "$base, segundo o que você registrou ${relativo(fonte.date)}."
+}
+
+private fun relativo(iso: String): String = try {
+    val tz = TimeZone.currentSystemDefault()
+    val dt = Instant.parse(iso).toLocalDateTime(tz)
+    val hoje = Clock.System.now().toLocalDateTime(tz).date
+    val hora = "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+    when (dt.date) {
+        hoje -> "hoje às $hora"
+        hoje.minus(1, DateTimeUnit.DAY) -> "ontem às $hora"
+        else -> "em ${dt.dayOfMonth.toString().padStart(2, '0')}/${dt.monthNumber.toString().padStart(2, '0')}, às $hora"
+    }
 } catch (e: Exception) {
     iso
 }
