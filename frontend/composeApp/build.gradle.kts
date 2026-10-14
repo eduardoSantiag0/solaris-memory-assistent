@@ -42,6 +42,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation("androidx.activity:activity-compose:1.9.2")
+            implementation("androidx.fragment:fragment-ktx:1.8.4")
+            implementation("androidx.biometric:biometric:1.1.0")
             implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
         }
         val desktopMain by getting

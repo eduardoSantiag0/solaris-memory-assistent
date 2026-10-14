@@ -39,7 +39,7 @@ fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExclui
     var confirmandoExclusao by remember { mutableStateOf(false) }
     var editando by remember { mutableStateOf(false) }
 
-    MemoryDetailContent(memory, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true })
+    MemoryDetailContent(memory, viewModel, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true })
 
     if (confirmandoExclusao) {
         val sensivel = memory.sensitivity == "SENSITIVE"
@@ -68,7 +68,7 @@ fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExclui
 }
 
 @Composable
-private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> Unit, onEditar: () -> Unit) {
+private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel, onPedirExclusao: () -> Unit, onEditar: () -> Unit) {
     val colors = LocalSolarisColors.current
     val isTemporaria = memory.expiresAt != null
     val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
@@ -106,7 +106,7 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
                     }
                 }
                 if (isSensivel) {
-                    MaskedValue(memory.content, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
+                    MaskedValue(memory.content, viewModel, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
                 } else {
                     Text(
                         memory.content,

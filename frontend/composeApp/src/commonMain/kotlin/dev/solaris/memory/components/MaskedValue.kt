@@ -8,33 +8,37 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val REVEAL_SECONDS = 30
 
 /**
- * HANDOFF.md 5.4 "Dados sensíveis". Implements the masking + 30s countdown +
- * auto-rehide mechanics, which are plain UI state and portable. The
- * biometric gate itself (BiometricPrompt before allowing reveal) is
- * Android-only and NOT wired yet — tapping "Revelar" shows the value
- * immediately. Needed before this is safe to ship for real sensitive data.
+ * HANDOFF.md 5.4 "Dados sensíveis". Mask + 30s countdown + auto-rehide, plus
+ * the identity gate before revealing (item 2) — Android BiometricPrompt or,
+ * on Desktop (no biometric hardware), the account password. See
+ * components/SensitiveGate.kt and its .android/.desktop actuals.
  *
  * v1.1 2.1: valor mascarado é superfície preenchida (`preenchimento`), sem
  * borda — não mais a caixa com filete da v1.
  */
 @Composable
-fun MaskedValue(value: String, modifier: Modifier = Modifier) {
+fun MaskedValue(value: String, viewModel: AppViewModel, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
     var revelado by remember { mutableStateOf(false) }
     var segundosRestantes by remember { mutableStateOf(REVEAL_SECONDS) }
+    val autenticar = rememberSensitiveGate(viewModel)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(revelado) {
         if (!revelado) return@LaunchedEffect
@@ -62,7 +66,13 @@ fun MaskedValue(value: String, modifier: Modifier = Modifier) {
             OutlineChip(
                 text = if (revelado) "Ocultar" else "Revelar",
                 icon = SolarisIcon.REVELAR,
-                onClick = { revelado = !revelado },
+                onClick = {
+                    if (revelado) {
+                        revelado = false
+                    } else {
+                        scope.launch { if (autenticar()) revelado = true }
+                    }
+                },
             )
         }
         if (revelado) {

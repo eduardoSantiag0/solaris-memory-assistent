@@ -111,7 +111,7 @@ fun MemoriesScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                             Text("MAIS RECENTES", style = solarisText.meta, color = colors.texto)
                         }
                     }
-                    items(vigentes) { memory -> MemoryRow(memory, onAbrirDetalhe) }
+                    items(vigentes) { memory -> MemoryRow(memory, viewModel, onAbrirDetalhe) }
                 }
                 if (vencidas.isNotEmpty()) {
                     item {
@@ -127,7 +127,7 @@ fun MemoriesScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                                 .padding(top = 14.dp),
                         )
                     }
-                    items(vencidas) { memory -> MemoryRow(memory, onAbrirDetalhe, expirada = true) }
+                    items(vencidas) { memory -> MemoryRow(memory, viewModel, onAbrirDetalhe, expirada = true) }
                 }
             }
         }
@@ -163,13 +163,14 @@ private fun FiltroTab(label: String, active: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MemoryRow(memory: MemoryResponse, onAbrirDetalhe: (String) -> Unit, expirada: Boolean = false) {
+private fun MemoryRow(memory: MemoryResponse, viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit, expirada: Boolean = false) {
     val numero = memory.id.takeLast(4).uppercase()
     val sensivel = memory.sensitivity == "SENSITIVE"
     MemoryCardItem(
         numero = numero,
         dataHora = formatarDataHora(memory.createdAt),
         conteudo = memory.content,
+        viewModel = viewModel,
         expirada = expirada,
         sensivel = sensivel,
         stamps = {

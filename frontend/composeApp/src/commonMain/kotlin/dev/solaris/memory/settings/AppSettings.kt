@@ -24,6 +24,7 @@ class AppSettings(private val settings: Settings) {
         private const val KEY_PALETTE = "palette_id"
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_TOKEN = "auth_token"
+        private const val KEY_USERNAME = "auth_username"
 
         private const val DEFAULT_SERVER_URL = "http://localhost:8080"
     }
@@ -46,6 +47,13 @@ class AppSettings(private val settings: Settings) {
         get() = settings.getStringOrNull(KEY_TOKEN)
         set(value) {
             if (value == null) settings.remove(KEY_TOKEN) else settings.putString(KEY_TOKEN, value)
+        }
+
+    /** Remembered so the Desktop sensitive-reveal gate (components/SensitiveGate.desktop.kt) can re-verify just the password, not ask for the username again — this app is single-user per instance (deploy/README.md PRE-05). */
+    var username: String?
+        get() = settings.getStringOrNull(KEY_USERNAME)
+        set(value) {
+            if (value == null) settings.remove(KEY_USERNAME) else settings.putString(KEY_USERNAME, value)
         }
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.solarisText
 
@@ -30,6 +31,7 @@ fun MemoryCardItem(
     numero: String,
     dataHora: String,
     conteudo: String,
+    viewModel: AppViewModel,
     modifier: Modifier = Modifier,
     expirada: Boolean = false,
     sensivel: Boolean = false,
@@ -59,7 +61,7 @@ fun MemoryCardItem(
             stamps()
         }
         if (sensivel) {
-            MaskedValue(conteudo, modifier = Modifier.padding(horizontal = 14.dp).padding(top = 12.dp, bottom = 4.dp))
+            MaskedValue(conteudo, viewModel, modifier = Modifier.padding(horizontal = 14.dp).padding(top = 12.dp, bottom = 4.dp))
         } else {
             Text(
                 conteudo,

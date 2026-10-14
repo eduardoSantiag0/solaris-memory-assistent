@@ -63,7 +63,7 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                         ChatRole.ASSISTANT -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             AssistantMessageMeta(entry.horario)
                             if (entry.sensivel) {
-                                MaskedValue(entry.text)
+                                MaskedValue(entry.text, viewModel)
                             } else {
                                 AssistantMessageBody(entry.text)
                             }

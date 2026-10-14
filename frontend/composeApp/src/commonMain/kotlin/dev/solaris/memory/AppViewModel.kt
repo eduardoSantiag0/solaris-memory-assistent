@@ -108,6 +108,7 @@ class AppViewModel(private val settings: AppSettings) {
             applyServerUrl()
             api.login(username, password)
             settings.token = api.currentToken()
+            settings.username = username
             isLoggedIn = true
             refreshMemories()
         } catch (e: Exception) {
@@ -115,9 +116,28 @@ class AppViewModel(private val settings: AppSettings) {
         }
     }
 
+    /**
+     * HANDOFF.md 5.4 item 2, adaptado para Desktop (sem biometria — ver
+     * components/SensitiveGate.desktop.kt): confirma a identidade antes de
+     * revelar um valor sensível reenviando a senha para /auth/login com o
+     * username já salvo. Não mexe em `isLoggedIn`/`loginError` — é uma
+     * checagem pontual, não um novo login.
+     */
+    suspend fun verificarSenha(password: String): Boolean {
+        val username = settings.username ?: return false
+        return try {
+            api.login(username, password)
+            settings.token = api.currentToken()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun logout() {
         api.logout()
         settings.token = null
+        settings.username = null
         isLoggedIn = false
         chatHistory = emptyList()
         memories = emptyList()
