@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.components.ConfirmDialog
 import dev.solaris.memory.components.DangerButton
 import dev.solaris.memory.components.MaskedValue
+import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SecondaryButton
 import dev.solaris.memory.components.Stamp
 import dev.solaris.memory.components.StampType
@@ -28,12 +30,13 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-/** HANDOFF.md tela 06. "Editar" reaproveita a folha Nova memória (não implementado ainda - fica para a próxima leva). */
+/** HANDOFF.md tela 06. "Editar" reaproveita a folha Nova memória em modo edição (RF-09). */
 @Composable
-fun MemoryDetailScreen(memory: MemoryResponse, onExcluido: () -> Unit) {
+fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExcluido: () -> Unit) {
     var confirmandoExclusao by remember { mutableStateOf(false) }
+    var editando by remember { mutableStateOf(false) }
 
-    MemoryDetailContent(memory) { confirmandoExclusao = true }
+    MemoryDetailContent(memory, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true })
 
     if (confirmandoExclusao) {
         val sensivel = memory.sensitivity == "SENSITIVE"
@@ -51,10 +54,18 @@ fun MemoryDetailScreen(memory: MemoryResponse, onExcluido: () -> Unit) {
             onCancelar = { confirmandoExclusao = false },
         )
     }
+
+    if (editando) {
+        NovaMemoriaSheet(
+            editando = memory,
+            onDismiss = { editando = false },
+            onSalvar = { resultado -> viewModel.updateMemoryFromForm(memory.id, resultado) },
+        )
+    }
 }
 
 @Composable
-private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> Unit) {
+private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> Unit, onEditar: () -> Unit) {
     val colors = LocalSolarisColors.current
     val isTemporaria = memory.expiresAt != null
     val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
@@ -128,7 +139,7 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
         Spacer(Modifier.weight(1f))
 
         Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            SecondaryButton(text = "Editar", onClick = { /* TODO: reaproveitar NovaMemoriaSheet em modo edição */ }, modifier = Modifier.weight(1f))
+            SecondaryButton(text = "Editar", onClick = onEditar, modifier = Modifier.weight(1f))
             Spacer(Modifier.width(12.dp))
             DangerButton(text = "Excluir", onClick = onPedirExclusao, modifier = Modifier.weight(1f))
         }

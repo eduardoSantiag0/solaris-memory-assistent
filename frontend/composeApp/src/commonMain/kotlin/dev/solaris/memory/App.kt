@@ -90,6 +90,7 @@ fun App() {
                     subAtual is SubScreen.Aparencia -> AppearanceScreen(viewModel)
                     subAtual is SubScreen.Detalhe && memoriaDetalhe != null -> MemoryDetailScreen(
                         memory = memoriaDetalhe,
+                        viewModel = viewModel,
                         onExcluido = {
                             sub = SubScreen.None
                             scope.launch { viewModel.deleteMemory(memoriaDetalhe.id) }

@@ -7,6 +7,7 @@ import dev.solaris.memory.network.ApiClient
 import dev.solaris.memory.network.ChatQueryResponse
 import dev.solaris.memory.network.CreateMemoryRequest
 import dev.solaris.memory.network.MemoryResponse
+import dev.solaris.memory.network.UpdateMemoryRequest
 import dev.solaris.memory.network.randomRequestId
 import dev.solaris.memory.settings.AppSettings
 import dev.solaris.memory.theme.Palette
@@ -18,6 +19,16 @@ import kotlinx.datetime.toLocalDateTime
 enum class ChatRole { USER, ASSISTANT }
 
 data class ChatEntry(val role: ChatRole, val text: String, val horario: String, val caption: String? = null, val sensivel: Boolean = false)
+
+/** NovaMemoriaSheet (telas 04/06) reports the form's resolved state, used verbatim both to create and to edit a memory. */
+data class NovaMemoriaFormResultado(
+    val conteudo: String,
+    val ttlDays: Int?,
+    val tornarPermanente: Boolean,
+    val eventAt: String?,
+    val removerEventAt: Boolean,
+    val sensivel: Boolean,
+)
 
 private fun agora(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -146,6 +157,27 @@ class AppViewModel(private val settings: AppSettings) {
                 "Salva como permanente."
             }
             chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, confirmacao, agora())
+            null
+        } catch (e: Exception) {
+            e.message ?: "Falha ao salvar — tente de novo."
+        }
+    }
+
+    /** Used by NovaMemoriaSheet in edit mode (tela 06, "Editar"). Same RNF-06 contract as createMemoryFromForm. */
+    suspend fun updateMemoryFromForm(id: String, resultado: NovaMemoriaFormResultado): String? {
+        return try {
+            api.updateMemory(
+                id,
+                UpdateMemoryRequest(
+                    content = resultado.conteudo,
+                    ttlDays = resultado.ttlDays,
+                    makePermanent = resultado.tornarPermanente,
+                    eventAt = resultado.eventAt,
+                    clearEventAt = resultado.removerEventAt,
+                    sensitivity = if (resultado.sensivel) "SENSITIVE" else "NORMAL",
+                ),
+            )
+            refreshMemories()
             null
         } catch (e: Exception) {
             e.message ?: "Falha ao salvar — tente de novo."

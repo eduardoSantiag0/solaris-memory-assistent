@@ -85,8 +85,8 @@ fun ChatScreen(viewModel: AppViewModel) {
         if (mostrarNovaMemoria) {
             NovaMemoriaSheet(
                 onDismiss = { mostrarNovaMemoria = false },
-                onSalvar = { content, ttlDays, sensitive ->
-                    viewModel.createMemoryFromForm(content, ttlDays, null, sensitive)
+                onSalvar = { resultado ->
+                    viewModel.createMemoryFromForm(resultado.conteudo, resultado.ttlDays, resultado.eventAt, resultado.sensivel)
                 },
             )
         }

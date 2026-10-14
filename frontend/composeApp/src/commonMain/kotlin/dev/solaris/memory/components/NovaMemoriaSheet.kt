@@ -20,37 +20,58 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import dev.solaris.memory.NovaMemoriaFormResultado
+import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlin.math.ceil
 import kotlin.time.Duration.Companion.hours
 
 private enum class TipoMemoria { PERMANENTE, TEMPORARIA }
 
 /**
- * HANDOFF.md tela 04. Overlay próprio em vez de Material3 ModalBottomSheet,
- * já que cantos retos e o véu exato dos tokens são mais simples de garantir
- * desenhando a folha na mão do que lutando contra a forma padrão do Material.
+ * HANDOFF.md telas 04 e 06. Overlay próprio em vez de Material3
+ * ModalBottomSheet, já que cantos retos e o véu exato dos tokens são mais
+ * simples de garantir desenhando a folha na mão do que lutando contra a
+ * forma padrão do Material.
  *
- * Seletor de data/hora do evento ("Definir") ainda não implementado — fica
- * para quando houver um DatePicker/TimePicker próprio do tema (HANDOFF.md
- * seção 9, "fora deste handoff").
+ * Com `editando` preenchido, a mesma folha serve para o "Editar" da tela
+ * de Detalhe (RF-09) — pré-carrega os campos e troca os textos, mas é a
+ * mesma lógica de formulário.
  */
 @Composable
-fun NovaMemoriaSheet(onDismiss: () -> Unit, onSalvar: suspend (content: String, ttlDays: Int?, sensitive: Boolean) -> String?) {
+fun NovaMemoriaSheet(
+    editando: MemoryResponse? = null,
+    onDismiss: () -> Unit,
+    onSalvar: suspend (NovaMemoriaFormResultado) -> String?,
+) {
     val colors = LocalSolarisColors.current
     val scope = rememberCoroutineScope()
 
-    var tipo by remember { mutableStateOf(TipoMemoria.TEMPORARIA) }
-    var dias by remember { mutableStateOf(2) }
-    var conteudo by remember { mutableStateOf("") }
-    var sensivel by remember { mutableStateOf(false) }
+    var tipo by remember {
+        mutableStateOf(
+            when {
+                editando == null -> TipoMemoria.TEMPORARIA
+                editando.expiresAt == null -> TipoMemoria.PERMANENTE
+                else -> TipoMemoria.TEMPORARIA
+            },
+        )
+    }
+    var dias by remember { mutableStateOf(editando?.expiresAt?.let { diasRestantes(it) } ?: 2) }
+    var conteudo by remember { mutableStateOf(editando?.content ?: "") }
+    var sensivel by remember { mutableStateOf(editando?.sensitivity == "SENSITIVE") }
     var salvando by remember { mutableStateOf(false) }
     var erro by remember { mutableStateOf<String?>(null) }
+    var dataEvento by remember { mutableStateOf(editando?.eventAt?.let { parseEventoLocal(it) }) }
+    var mostrarSeletorData by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -77,7 +98,7 @@ fun NovaMemoriaSheet(onDismiss: () -> Unit, onSalvar: suspend (content: String, 
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Nova memória", style = solarisText.tituloFolha, color = colors.texto)
+                Text(if (editando != null) "Editar memória" else "Nova memória", style = solarisText.tituloFolha, color = colors.texto)
                 IconSquareButton(SolarisIcon.FECHAR, "Fechar", onDismiss)
             }
 
@@ -127,9 +148,17 @@ fun NovaMemoriaSheet(onDismiss: () -> Unit, onSalvar: suspend (content: String, 
             ) {
                 Column {
                     Text("DATA DO EVENTO", style = solarisText.meta, color = colors.textoSecundario)
-                    Text("Não informada", style = solarisText.corpo, color = colors.texto)
+                    Text(dataEvento?.let { formatarDataEvento(it) } ?: "Não informada", style = solarisText.corpo, color = colors.texto)
                 }
-                OutlineChip(text = "Definir", onClick = { /* TODO: date/time picker */ })
+                OutlineChip(text = if (dataEvento != null) "Alterar" else "Definir", onClick = { mostrarSeletorData = true })
+            }
+            if (dataEvento != null) {
+                Text(
+                    "Remover data do evento",
+                    style = solarisText.meta,
+                    color = colors.acao,
+                    modifier = Modifier.padding(top = 4.dp).clickable { dataEvento = null },
+                )
             }
 
             Row(
@@ -153,12 +182,22 @@ fun NovaMemoriaSheet(onDismiss: () -> Unit, onSalvar: suspend (content: String, 
             }
 
             PrimaryButton(
-                text = if (salvando) "Salvando..." else "Salvar memória",
+                text = if (salvando) "Salvando..." else if (editando != null) "Salvar alterações" else "Salvar memória",
                 enabled = conteudo.isNotBlank() && !salvando,
                 onClick = {
                     scope.launch {
                         salvando = true
-                        val resultado = onSalvar(conteudo, if (tipo == TipoMemoria.TEMPORARIA) dias else null, sensivel)
+                        val eventAt = dataEvento?.toInstant(TimeZone.currentSystemDefault())?.toString()
+                        val resultado = onSalvar(
+                            NovaMemoriaFormResultado(
+                                conteudo = conteudo,
+                                ttlDays = if (tipo == TipoMemoria.TEMPORARIA) dias else null,
+                                tornarPermanente = tipo == TipoMemoria.PERMANENTE,
+                                eventAt = eventAt,
+                                removerEventAt = dataEvento == null,
+                                sensivel = sensivel,
+                            ),
+                        )
                         salvando = false
                         if (resultado == null) {
                             onDismiss()
@@ -170,20 +209,52 @@ fun NovaMemoriaSheet(onDismiss: () -> Unit, onSalvar: suspend (content: String, 
                 modifier = Modifier.padding(top = 20.dp),
             )
 
-            Text(
-                buildAnnotatedString {
-                    append("Equivale a ")
-                    withStyle(solarisText.comando.toSpanStyle()) {
-                        append(if (tipo == TipoMemoria.TEMPORARIA) "/add-temp $dias" else "/add")
-                    }
-                    append(" no chat")
-                },
-                style = solarisText.meta,
-                color = colors.textoSecundario,
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp, bottom = 8.dp),
-            )
+            if (editando == null) {
+                Text(
+                    buildAnnotatedString {
+                        append("Equivale a ")
+                        withStyle(solarisText.comando.toSpanStyle()) {
+                            append(if (tipo == TipoMemoria.TEMPORARIA) "/add-temp $dias" else "/add")
+                        }
+                        append(" no chat")
+                    },
+                    style = solarisText.meta,
+                    color = colors.textoSecundario,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp, bottom = 8.dp),
+                )
+            }
         }
     }
+
+    if (mostrarSeletorData) {
+        DataEventoDialog(
+            inicial = dataEvento,
+            onConfirmar = { dataEvento = it; mostrarSeletorData = false },
+            onCancelar = { mostrarSeletorData = false },
+        )
+    }
+}
+
+private fun formatarDataEvento(dataHora: LocalDateTime): String {
+    val dia = dataHora.dayOfMonth.toString().padStart(2, '0')
+    val mes = dataHora.monthNumber.toString().padStart(2, '0')
+    val hora = dataHora.hour.toString().padStart(2, '0')
+    val min = dataHora.minute.toString().padStart(2, '0')
+    return "$dia/$mes, $hora:$min"
+}
+
+private fun parseEventoLocal(iso: String): LocalDateTime? = try {
+    Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
+} catch (e: Exception) {
+    null
+}
+
+/** Pré-carrega o stepper de dias no modo edição com o prazo restante — se o usuário salvar sem tocar no campo, o PATCH renova por esse mesmo prazo visível, nunca um valor que a tela não mostrou (RNF-06). */
+private fun diasRestantes(expiresAtIso: String): Int = try {
+    val restante = Instant.parse(expiresAtIso) - Clock.System.now()
+    ceil(restante.inWholeHours / 24.0).toInt().coerceIn(1, 365)
+} catch (e: Exception) {
+    2
 }
 
 @Composable

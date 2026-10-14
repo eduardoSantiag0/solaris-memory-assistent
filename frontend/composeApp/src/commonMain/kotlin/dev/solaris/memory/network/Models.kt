@@ -25,6 +25,8 @@ data class UpdateMemoryRequest(
     val makePermanent: Boolean = false,
     val eventAt: String? = null,
     val clearEventAt: Boolean = false,
+    /** "NORMAL" | "SENSITIVE" | null (null keeps the current value). */
+    val sensitivity: String? = null,
 )
 
 @Serializable
