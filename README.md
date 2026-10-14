@@ -1,6 +1,6 @@
 # 🪐 solaris-memory-assistent
 <p align="center">
-  <img src="design/solaris-handoff/assets/assinatura-horizontal.svg" alt="solaris" width="300" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/assets/banners/solaris-banner-readme.gif" alt="solaris" width="600" />
 </p>
 
 🇺🇸 English (this file) · 🇧🇷 [Português](README.pt-BR.md)
@@ -18,13 +18,14 @@ and section numbers for traceability.
 ## 🖼️ Screenshots
 
 Design: "retrô calmo" (calm retro), official **Estação** palette, IBM Plex
-Sans/Mono. Full handoff in [`design/solaris-handoff/`](design/solaris-handoff/).
+Sans/Mono. Full handoff (v1.1) in
+[`design/solaris-handoff_v2/solaris-handoff_2/`](design/solaris-handoff_v2/solaris-handoff_2/).
 
 <p align="center">
-  <img src="design/solaris-handoff/referencia-png/02-chat.png" width="23%" alt="Chat screen, light theme" />
-  <img src="design/solaris-handoff/referencia-png/13-chat-escuro.png" width="23%" alt="Chat screen, dark theme" />
-  <img src="design/solaris-handoff/referencia-png/05-memorias.png" width="23%" alt="Memories list" />
-  <img src="design/solaris-handoff/referencia-png/09-aparencia.png" width="23%" alt="Appearance settings with 5 palettes" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/02-chat.png" width="23%" alt="Chat screen, light theme" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/13-chat-escuro.png" width="23%" alt="Chat screen, dark theme" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/05-memorias.png" width="23%" alt="Memories list" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/09-aparencia.png" width="23%" alt="Appearance settings with 5 palettes" />
 </p>
 
 <p align="center"><sub>Chat (light) · Chat (dark) · Memórias · Aparência — all fictional data (RNF-12)</sub></p>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="design/solaris-handoff/assets/assinatura-horizontal.svg" alt="solaris" width="300" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/assets/banners/solaris-banner-readme.gif" alt="solaris" width="600" />
 </p>
 
 # 🪐 solaris-memory-assistent
@@ -20,14 +20,14 @@ rastreabilidade.
 ## 🖼️ Capturas de tela
 
 Design: "retrô calmo", paleta oficial **Estação**, tipografia IBM Plex
-Sans/Mono. Pacote completo em
-[`design/solaris-handoff/`](design/solaris-handoff/).
+Sans/Mono. Pacote completo (v1.1) em
+[`design/solaris-handoff_v2/solaris-handoff_2/`](design/solaris-handoff_v2/solaris-handoff_2/).
 
 <p align="center">
-  <img src="design/solaris-handoff/referencia-png/02-chat.png" width="23%" alt="Tela de chat, tema claro" />
-  <img src="design/solaris-handoff/referencia-png/13-chat-escuro.png" width="23%" alt="Tela de chat, tema escuro" />
-  <img src="design/solaris-handoff/referencia-png/05-memorias.png" width="23%" alt="Lista de memórias" />
-  <img src="design/solaris-handoff/referencia-png/09-aparencia.png" width="23%" alt="Ajustes de aparência com as 5 paletas" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/02-chat.png" width="23%" alt="Tela de chat, tema claro" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/13-chat-escuro.png" width="23%" alt="Tela de chat, tema escuro" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/05-memorias.png" width="23%" alt="Lista de memórias" />
+  <img src="design/solaris-handoff_v2/solaris-handoff_2/referencia-png/09-aparencia.png" width="23%" alt="Ajustes de aparência com as 5 paletas" />
 </p>
 
 <p align="center"><sub>Chat (claro) · Chat (escuro) · Memórias · Aparência — todos os dados são fictícios (RNF-12)</sub></p>

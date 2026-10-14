@@ -25,6 +25,7 @@ import dev.solaris.memory.screens.ChatScreen
 import dev.solaris.memory.screens.MemoriesScreen
 import dev.solaris.memory.screens.MemoryDetailScreen
 import dev.solaris.memory.screens.SettingsScreen
+import dev.solaris.memory.screens.SplashScreen
 import dev.solaris.memory.settings.AppSettings
 import dev.solaris.memory.settings.createPlatformSettings
 import dev.solaris.memory.theme.LocalSolarisColors
@@ -60,9 +61,7 @@ fun App() {
         val colors = LocalSolarisColors.current
 
         if (viewModel.isRestoringSession) {
-            Box(modifier = Modifier.fillMaxSize().background(colors.fundo), contentAlignment = Alignment.Center) {
-                Text("Carregando...", color = colors.texto)
-            }
+            SplashScreen()
             return@SolarisTheme
         }
 
