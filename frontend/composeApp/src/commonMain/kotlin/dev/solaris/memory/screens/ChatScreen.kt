@@ -22,6 +22,7 @@ import dev.solaris.memory.components.ComandoAutocomplete
 import dev.solaris.memory.components.Composer
 import dev.solaris.memory.components.MaskedValue
 import dev.solaris.memory.components.NovaMemoriaSheet
+import dev.solaris.memory.components.SavedMessage
 import dev.solaris.memory.components.SourceLink
 import dev.solaris.memory.components.UserMessage
 import dev.solaris.memory.components.deveMostrarAutocomplete
@@ -67,7 +68,9 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                         ChatRole.ASSISTANT -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             AssistantMessageMeta(entry.horario)
                             val fonte = entry.fonte
-                            if (entry.sensivel) {
+                            if (entry.salva) {
+                                SavedMessage(entry.text)
+                            } else if (entry.sensivel) {
                                 MaskedValue(entry.text, viewModel)
                             } else {
                                 AssistantMessageBody(respostaConversacional(entry.text, fonte))

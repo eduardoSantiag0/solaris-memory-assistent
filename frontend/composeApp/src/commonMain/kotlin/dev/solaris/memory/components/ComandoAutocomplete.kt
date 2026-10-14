@@ -28,6 +28,8 @@ private data class ComandoSugestao(val icon: SolarisIcon, val comando: String, v
 private val COMANDOS = listOf(
     ComandoSugestao(SolarisIcon.PERMANENTE, "/add", "<texto>", "Memória permanente"),
     ComandoSugestao(SolarisIcon.TEMPORARIA, "/add-temp", "<dias> <texto>", "Temporária · sai das respostas depois do prazo"),
+    ComandoSugestao(SolarisIcon.SENSIVEL, "/add-sensitive", "<texto>", "Permanente · mascarada nas respostas"),
+    ComandoSugestao(SolarisIcon.SENSIVEL, "/add-temp-sensitive", "<dias> <texto>", "Temporária e mascarada"),
 )
 
 /** True while the composer field should show the command autocomplete (HANDOFF.md tela 03, RF-15). */

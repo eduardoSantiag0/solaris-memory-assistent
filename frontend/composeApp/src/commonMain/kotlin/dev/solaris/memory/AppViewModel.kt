@@ -27,6 +27,8 @@ data class ChatEntry(
     val sensivel: Boolean = false,
     /** HANDOFF.md v1.1 "Linha de fonte" — presente só nas respostas a perguntas, não nas confirmações de gravação. */
     val fonte: SourceRef? = null,
+    /** HANDOFF.md v1.1 "Confirmação de gravação" — renderiza com a bandeirinha (components/SavedMessage) em vez de texto corrido comum. */
+    val salva: Boolean = false,
 )
 
 /** NovaMemoriaSheet (telas 04/06) reports the form's resolved state, used verbatim both to create and to edit a memory. */
@@ -185,7 +187,7 @@ class AppViewModel(private val settings: AppSettings) {
             } else {
                 "Salva como permanente."
             }
-            chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, confirmacao, agora())
+            chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, confirmacao, agora(), salva = true)
             null
         } catch (e: Exception) {
             e.message ?: "Falha ao salvar — tente de novo."
@@ -222,6 +224,35 @@ class AppViewModel(private val settings: AppSettings) {
 
         try {
             when {
+                input.startsWith("/add-temp-sensitive") -> {
+                    val rest = input.removePrefix("/add-temp-sensitive").trim()
+                    val parts = rest.split(" ", limit = 2)
+                    val days = parts.getOrNull(0)?.toIntOrNull()
+                    val text = parts.getOrNull(1)?.trim().orEmpty()
+                    if (days == null || days <= 0 || text.isEmpty()) {
+                        chatHistory = chatHistory + ChatEntry(
+                            ChatRole.ASSISTANT, "Uso: /add-temp-sensitive <dias> <texto>. Exemplo: /add-temp-sensitive 2 Senha do wifi: abc123.", agora(),
+                        )
+                        return
+                    }
+                    val created = api.createMemory(CreateMemoryRequest(content = text, ttlDays = days, sensitivity = "SENSITIVE"))
+                    refreshMemories()
+                    chatHistory = chatHistory + ChatEntry(
+                        ChatRole.ASSISTANT, "Memória temporária e sensível criada.", agora(), caption = "válida até ${created.expiresAt}", salva = true,
+                    )
+                }
+                input.startsWith("/add-sensitive") -> {
+                    val text = input.removePrefix("/add-sensitive").trim()
+                    if (text.isEmpty()) {
+                        chatHistory = chatHistory + ChatEntry(
+                            ChatRole.ASSISTANT, "Uso: /add-sensitive <texto>. Exemplo: /add-sensitive Meu RG é 12.345.678-9.", agora(),
+                        )
+                        return
+                    }
+                    api.createMemory(CreateMemoryRequest(content = text, sensitivity = "SENSITIVE"))
+                    refreshMemories()
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente e sensível criada.", agora(), salva = true)
+                }
                 input.startsWith("/add-temp") -> {
                     val rest = input.removePrefix("/add-temp").trim()
                     val parts = rest.split(" ", limit = 2)
@@ -236,7 +267,7 @@ class AppViewModel(private val settings: AppSettings) {
                     val created = api.createMemory(CreateMemoryRequest(content = text, ttlDays = days))
                     refreshMemories()
                     chatHistory = chatHistory + ChatEntry(
-                        ChatRole.ASSISTANT, "Memória temporária criada.", agora(), caption = "válida até ${created.expiresAt}",
+                        ChatRole.ASSISTANT, "Memória temporária criada.", agora(), caption = "válida até ${created.expiresAt}", salva = true,
                     )
                 }
                 input.startsWith("/add") -> {
@@ -249,7 +280,7 @@ class AppViewModel(private val settings: AppSettings) {
                     }
                     api.createMemory(CreateMemoryRequest(content = text))
                     refreshMemories()
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente criada.", agora())
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Memória permanente criada.", agora(), salva = true)
                 }
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())
