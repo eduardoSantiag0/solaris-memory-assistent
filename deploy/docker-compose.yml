@@ -4,12 +4,19 @@
 # to the VPN reaches the API through the wireguard container, which bridges
 # into this same internal network.
 #
+# Target host: an Oracle Cloud VM (Always Free tier) — real root, systemd,
+# real Docker. `restart: unless-stopped` works as intended here as long as
+# the Docker service itself is enabled to start on boot (deploy/README.md
+# covers this) — no cron-based supervisor needed.
+#
 # Deploy steps are in deploy/README.md. Copy deploy/.env.example to
-# deploy/.env and fill in real secrets before running `docker compose up -d`.
+# deploy/.env (chmod 600) and fill in real secrets before running
+# `docker compose up -d --build`.
 
 services:
   postgres:
     image: pgvector/pgvector:pg16
+    container_name: solaris_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: solaris_memory
@@ -28,6 +35,7 @@ services:
   backend:
     build:
       context: ../backend
+    container_name: solaris_backend
     restart: unless-stopped
     depends_on:
       - postgres
@@ -42,7 +50,14 @@ services:
       APP_USER: ${APP_USER}
       APP_PASSWORD_HASH: ${APP_PASSWORD_HASH}
       APP_EMBEDDINGS_ENABLED: ${APP_EMBEDDINGS_ENABLED:-false}
+      # Only read at all if embeddings are enabled.
       APP_OLLAMA_URL: ${APP_OLLAMA_URL:-http://host.docker.internal:11434}
+      # Oracle's Always Free VM is modest (and single-user per doc PRE-05) —
+      # a JVM that autodetects the host's full core count spends threads on
+      # GC/JIT it doesn't need, and Tomcat defaults to a 200-thread pool.
+      # Both clamped to something sane for a small personal deployment.
+      JAVA_TOOL_OPTIONS: "-XX:ActiveProcessorCount=2 -Xmx512m"
+      SERVER_TOMCAT_THREADS_MAX: "20"
     networks:
       internal:
         # Pinned so the phone's WireGuard client can address it by a fixed
@@ -54,6 +69,7 @@ services:
 
   wireguard:
     image: lscr.io/linuxserver/wireguard:latest
+    container_name: solaris_wireguard
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
