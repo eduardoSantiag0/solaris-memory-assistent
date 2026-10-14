@@ -1,6 +1,6 @@
 package dev.solaris.memory.components
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -17,31 +17,33 @@ import dev.solaris.memory.theme.solarisText
 
 enum class StampType { PERMANENTE, TEMPORARIA, SENSIVEL, VENCIDA }
 
-/** HANDOFF.md: "Sempre ícone + texto, nunca só cor" (acessibilidade, seção 11.5 dos requisitos). */
+/**
+ * HANDOFF.md: "Sempre ícone + texto, nunca só cor" (acessibilidade, seção
+ * 11.5 dos requisitos). v1.1 2.1: selos são etiquetas preenchidas, sem
+ * borda — exceto VENCIDA, que fica transparente com contorno tracejado.
+ */
 @Composable
 fun Stamp(type: StampType, detail: String? = null, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
-    val (icon, label, borderColor) = when (type) {
-        StampType.PERMANENTE -> Triple(SolarisIcon.PERMANENTE, "PERMANENTE", colors.filete)
-        StampType.TEMPORARIA -> Triple(SolarisIcon.TEMPORARIA, "TEMPORÁRIA", colors.acao)
-        StampType.SENSIVEL -> Triple(SolarisIcon.SENSIVEL, "SENSÍVEL", colors.acao)
-        StampType.VENCIDA -> Triple(null, "VENCIDA", colors.filete)
+    val (icon, label, tint, background) = when (type) {
+        StampType.PERMANENTE -> Quadruple(SolarisIcon.PERMANENTE, "PERMANENTE", colors.texto, colors.seloPermanente)
+        StampType.TEMPORARIA -> Quadruple(SolarisIcon.TEMPORARIA, "TEMPORÁRIA", colors.acao, colors.seloTemporaria)
+        StampType.SENSIVEL -> Quadruple(SolarisIcon.SENSIVEL, "SENSÍVEL", colors.acao, colors.seloTemporaria)
+        StampType.VENCIDA -> Quadruple(null, "VENCIDA", colors.tracejado, null)
     }
     val text = if (detail != null) "$label · $detail" else label
-    val borderModifier = if (type == StampType.VENCIDA) {
-        Modifier.dashedBorder(borderColor)
-    } else {
-        Modifier.border(1.dp, borderColor)
-    }
+    val fundoModifier = if (background != null) Modifier.background(background) else Modifier.dashedBorder(colors.tracejado)
 
     Row(
-        modifier = modifier.then(borderModifier).padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = modifier.then(fundoModifier).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            SolarisIconGlyph(icon, borderColor, size = 14.dp)
+            SolarisIconGlyph(icon, tint, size = 14.dp)
             Spacer(Modifier.width(4.dp))
         }
         Text(text, style = solarisText.meta, color = colors.texto)
     }
 }
+
+private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

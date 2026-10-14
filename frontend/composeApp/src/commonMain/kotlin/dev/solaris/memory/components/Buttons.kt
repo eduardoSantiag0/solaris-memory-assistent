@@ -90,13 +90,19 @@ fun OutlineChip(text: String, onClick: () -> Unit, icon: SolarisIcon? = null, mo
     }
 }
 
+/**
+ * HANDOFF.md 2.1: icon-only buttons are transparent by default (voltar,
+ * fechar, a engrenagem do cabeçalho) — `preenchido = true` gives the
+ * filled-`preenchimento`, no-border treatment used for "+" e os passos
+ * do stepper de dias.
+ */
 @Composable
-fun IconSquareButton(icon: SolarisIcon, contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier, tint: Color? = null) {
+fun IconSquareButton(icon: SolarisIcon, contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier, tint: Color? = null, preenchido: Boolean = false) {
     val colors = LocalSolarisColors.current
     Box(
         modifier = modifier
             .size(MIN_TOUCH_TARGET)
-            .border(1.dp, colors.filete)
+            .let { if (preenchido) it.background(colors.preenchimento) else it }
             .clickable(onClick = onClick, onClickLabel = contentDescription),
         contentAlignment = Alignment.Center,
     ) {

@@ -34,7 +34,7 @@ fun SettingsScreen(viewModel: AppViewModel, onAbrirAparencia: () -> Unit) {
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(20.dp)) {
         SecaoTitulo("CONEXÃO")
         Text("VPN · WireGuard", style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(top = 8.dp))
         Text("Servidor (API)", style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(top = 4.dp))
@@ -96,7 +96,12 @@ fun SettingsScreen(viewModel: AppViewModel, onAbrirAparencia: () -> Unit) {
 @Composable
 private fun SecaoTitulo(text: String, topPadding: androidx.compose.ui.unit.Dp = 16.dp) {
     val colors = LocalSolarisColors.current
-    Text(text, style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = topPadding, bottom = 8.dp))
+    Text(
+        text,
+        style = solarisText.meta.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+        color = colors.texto,
+        modifier = Modifier.padding(top = topPadding, bottom = 8.dp),
+    )
 }
 
 @Composable

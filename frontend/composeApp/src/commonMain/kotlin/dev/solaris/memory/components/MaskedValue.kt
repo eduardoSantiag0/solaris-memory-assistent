@@ -1,7 +1,6 @@
 package dev.solaris.memory.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +26,9 @@ private const val REVEAL_SECONDS = 30
  * biometric gate itself (BiometricPrompt before allowing reveal) is
  * Android-only and NOT wired yet — tapping "Revelar" shows the value
  * immediately. Needed before this is safe to ship for real sensitive data.
+ *
+ * v1.1 2.1: valor mascarado é superfície preenchida (`preenchimento`), sem
+ * borda — não mais a caixa com filete da v1.
  */
 @Composable
 fun MaskedValue(value: String, modifier: Modifier = Modifier) {
@@ -44,21 +46,18 @@ fun MaskedValue(value: String, modifier: Modifier = Modifier) {
         revelado = false
     }
 
-    Column(modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(colors.superficie)
-                    .border(1.dp, colors.filete)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-            ) {
-                Text(
-                    if (revelado) value else maskOf(value),
-                    style = if (revelado) solarisText.corpo.copy(fontFamily = solarisText.comando.fontFamily, fontSize = 22.sp) else solarisText.corpo,
-                    color = colors.texto,
-                )
-            }
+    Column(modifier = modifier.fillMaxWidth().background(colors.preenchimento)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                if (revelado) value else maskOf(value),
+                style = solarisText.comando.copy(fontSize = 20.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.5.sp),
+                color = colors.texto,
+                modifier = Modifier.weight(1f, fill = false),
+            )
             Spacer(Modifier.width(8.dp))
             OutlineChip(
                 text = if (revelado) "Ocultar" else "Revelar",
@@ -67,20 +66,23 @@ fun MaskedValue(value: String, modifier: Modifier = Modifier) {
             )
         }
         if (revelado) {
-            Column(modifier = Modifier.padding(top = 8.dp)) {
-                val proporcao = segundosRestantes.toFloat() / REVEAL_SECONDS
-                Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(colors.trilho)) {
-                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(proporcao.coerceIn(0f, 1f)).background(colors.acao))
-                }
-                Text(
-                    "OCULTA DE NOVO EM 0:${segundosRestantes.toString().padStart(2, '0')}",
-                    style = solarisText.meta,
-                    color = colors.textoSecundario,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+            val proporcao = segundosRestantes.toFloat() / REVEAL_SECONDS
+            Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(colors.trilho)) {
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(proporcao.coerceIn(0f, 1f)).background(colors.acao))
             }
+            Text(
+                "OCULTA DE NOVO EM 0:${segundosRestantes.toString().padStart(2, '0')}",
+                style = solarisText.meta,
+                color = colors.texto,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            )
         } else {
-            Text("SENSÍVEL · PEDE BIOMETRIA", style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 4.dp))
+            Text(
+                "SENSÍVEL · PEDE BIOMETRIA",
+                style = solarisText.meta,
+                color = colors.texto,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            )
         }
     }
 }

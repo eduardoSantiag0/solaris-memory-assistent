@@ -12,10 +12,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.rememberCoroutineScope
 import dev.solaris.memory.components.AppHeader
-import dev.solaris.memory.components.BottomNav
-import dev.solaris.memory.components.NavTab
+import dev.solaris.memory.components.BackHeader
+import dev.solaris.memory.components.SecaoPrincipal
+import dev.solaris.memory.components.SectionTabs
 import dev.solaris.memory.screens.AppearanceScreen
 import dev.solaris.memory.screens.ChatScreen
 import dev.solaris.memory.screens.MemoriesScreen
@@ -25,23 +29,26 @@ import dev.solaris.memory.settings.AppSettings
 import dev.solaris.memory.settings.createPlatformSettings
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisTheme
+import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
 
 private sealed class SubScreen {
     object None : SubScreen()
+    object Ajustes : SubScreen()
     object Aparencia : SubScreen()
     data class Detalhe(val memoriaId: String) : SubScreen()
 }
 
 /**
- * HANDOFF.md section 4: shell = AppHeader + conteúdo + BottomNav. Aparência
- * (tela 09) não é uma 4ª aba, é alcançada a partir de Ajustes - continua
- * mostrando AJUSTES como selecionado, com botão voltar no cabeçalho.
+ * HANDOFF.md v1.1 section 4: shell = AppHeader + SectionTabs (Conversa ·
+ * Memórias) + conteúdo. Não há mais navegação inferior — Ajustes é
+ * alcançado pela engrenagem do cabeçalho, não é uma aba, por isso vive em
+ * `sub`, não em `secao`.
  */
 @Composable
 fun App() {
     val viewModel = remember { AppViewModel(AppSettings(createPlatformSettings())) }
-    var tab by rememberSaveable { mutableStateOf(NavTab.CHAT) }
+    var secao by rememberSaveable { mutableStateOf(SecaoPrincipal.CONVERSA) }
     var sub by remember { mutableStateOf<SubScreen>(SubScreen.None) }
     val scope = rememberCoroutineScope()
 
@@ -61,7 +68,13 @@ fun App() {
 
         if (!viewModel.isLoggedIn) {
             Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
-                AppHeader(titulo = "solaris", vpnOk = false)
+                Box(modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 56.dp).padding(16.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        "Solaris",
+                        style = solarisText.tituloTela.copy(fontWeight = FontWeight.Normal, fontSize = 17.sp, letterSpacing = 3.sp),
+                        color = colors.textoSuave,
+                    )
+                }
                 SettingsScreen(viewModel, onAbrirAparencia = {})
             }
             return@SolarisTheme
@@ -70,23 +83,28 @@ fun App() {
         Column(modifier = Modifier.fillMaxSize().background(colors.fundo)) {
             val subAtual = sub
             val memoriaDetalhe = (subAtual as? SubScreen.Detalhe)?.let { d -> viewModel.memories.find { it.id == d.memoriaId } }
-            val titulo = when {
-                subAtual is SubScreen.Aparencia -> "Aparência"
-                subAtual is SubScreen.Detalhe -> "Ficha Nº ${(subAtual.memoriaId).takeLast(4).uppercase()}"
-                tab == NavTab.CHAT -> "solaris"
-                tab == NavTab.MEMORIAS -> "Memórias"
-                else -> "Ajustes"
+
+            when {
+                subAtual is SubScreen.Ajustes -> BackHeader(titulo = "Ajustes", onVoltar = { sub = SubScreen.None })
+                subAtual is SubScreen.Aparencia -> BackHeader(titulo = "Aparência", onVoltar = { sub = SubScreen.Ajustes })
+                subAtual is SubScreen.Detalhe -> BackHeader(
+                    titulo = "Ficha Nº ${subAtual.memoriaId.takeLast(4).uppercase()}",
+                    onVoltar = { sub = SubScreen.None },
+                    onAjustes = { sub = SubScreen.Ajustes },
+                )
+                else -> {
+                    AppHeader(onAjustes = { sub = SubScreen.Ajustes })
+                    SectionTabs(
+                        selecionada = secao,
+                        contadorMemorias = viewModel.memories.size,
+                        onSelecionar = { secao = it },
+                    )
+                }
             }
-            val contador = if (tab == NavTab.MEMORIAS && subAtual is SubScreen.None) viewModel.memories.size else null
-            AppHeader(
-                titulo = titulo,
-                contador = contador,
-                onVoltar = if (subAtual !is SubScreen.None) ({ sub = SubScreen.None }) else null,
-                vpnOk = true,
-            )
 
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 when {
+                    subAtual is SubScreen.Ajustes -> SettingsScreen(viewModel, onAbrirAparencia = { sub = SubScreen.Aparencia })
                     subAtual is SubScreen.Aparencia -> AppearanceScreen(viewModel)
                     subAtual is SubScreen.Detalhe && memoriaDetalhe != null -> MemoryDetailScreen(
                         memory = memoriaDetalhe,
@@ -96,13 +114,10 @@ fun App() {
                             scope.launch { viewModel.deleteMemory(memoriaDetalhe.id) }
                         },
                     )
-                    tab == NavTab.CHAT -> ChatScreen(viewModel)
-                    tab == NavTab.MEMORIAS -> MemoriesScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.Detalhe(id) })
-                    tab == NavTab.AJUSTES -> SettingsScreen(viewModel, onAbrirAparencia = { sub = SubScreen.Aparencia })
+                    secao == SecaoPrincipal.CONVERSA -> ChatScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.Detalhe(id) })
+                    secao == SecaoPrincipal.MEMORIAS -> MemoriesScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.Detalhe(id) })
                 }
             }
-
-            BottomNav(selected = tab, onSelect = { tab = it; sub = SubScreen.None })
         }
     }
 }

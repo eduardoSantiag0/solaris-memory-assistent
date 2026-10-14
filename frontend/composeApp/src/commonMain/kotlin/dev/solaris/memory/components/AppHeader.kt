@@ -9,22 +9,53 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
 
-/** HANDOFF.md section 3: Cabeçalho — altura mínima 56dp, filete inferior, logo ou voltar à esquerda, status VPN à direita. */
+/**
+ * HANDOFF.md v1.1 section 3 "Cabeçalho principal" — usado só em Conversa e
+ * Memórias. Grade de 3 colunas: status da VPN à esquerda, `Solaris`
+ * centralizado, engrenagem à direita. O símbolo "não aparece no
+ * cabeçalho" (seção 1) — quem separa do conteúdo são as abas (SectionTabs),
+ * por isso não há filete inferior aqui.
+ */
 @Composable
-fun AppHeader(
-    titulo: String,
-    contador: Int? = null,
-    onVoltar: (() -> Unit)? = null,
-    vpnOk: Boolean = true,
-    modifier: Modifier = Modifier,
-) {
+fun AppHeader(onAjustes: () -> Unit, vpnOk: Boolean = true, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
-    val fileteColor = colors.filete
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 56.dp)
+            .background(colors.fundo)
+            .padding(start = 20.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.weight(1f)) { VpnStatus(vpnOk) }
+        Text(
+            "Solaris",
+            style = solarisText.tituloTela.copy(fontWeight = FontWeight.Normal, fontSize = 17.sp, letterSpacing = 3.sp),
+            color = colors.textoSuave,
+        )
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+            IconSquareButton(SolarisIcon.AJUSTES, "Ajustes", onAjustes)
+        }
+    }
+}
+
+/**
+ * HANDOFF.md v1.1 section 3 "Cabeçalho secundário" — Detalhe, Ajustes,
+ * Aparência. `onAjustes` nulo deixa o espaço vazio (ex.: dentro do
+ * próprio Ajustes, não faz sentido levar pra ele mesmo).
+ */
+@Composable
+fun BackHeader(titulo: String, onVoltar: () -> Unit, onAjustes: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+    val colors = LocalSolarisColors.current
+    val fileteColor = colors.divisoria
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -33,19 +64,22 @@ fun AppHeader(
             .drawBehind {
                 drawLine(fileteColor, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
             }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (onVoltar != null) {
-            IconSquareButton(SolarisIcon.VOLTAR, "Voltar", onVoltar)
+        IconSquareButton(SolarisIcon.VOLTAR, "Voltar", onVoltar)
+        Text(
+            titulo,
+            style = solarisText.tituloTela,
+            color = colors.texto,
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+            textAlign = TextAlign.Center,
+        )
+        if (onAjustes != null) {
+            IconSquareButton(SolarisIcon.AJUSTES, "Ajustes", onAjustes)
         } else {
-            SolarisLogoTile(size = 30.dp)
+            Spacer(Modifier.size(44.dp))
         }
-        Spacer(Modifier.width(12.dp))
-        val tituloCompleto = if (contador != null) "$titulo · $contador" else titulo
-        Text(tituloCompleto, style = solarisText.tituloTela, color = colors.texto, modifier = Modifier.weight(1f))
-
-        VpnStatus(vpnOk)
     }
 }
 
@@ -54,11 +88,11 @@ private fun VpnStatus(ok: Boolean) {
     val colors = LocalSolarisColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (ok) {
-            Box(Modifier.size(8.dp).background(colors.status))
+            Box(Modifier.size(7.dp).background(colors.status))
         } else {
-            Box(Modifier.size(8.dp).border(1.dp, colors.acao))
+            Box(Modifier.size(7.dp).border(1.dp, colors.acao))
         }
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(8.dp))
         Text(if (ok) "VPN · OK" else "SEM VPN", style = solarisText.meta, color = colors.texto)
     }
 }

@@ -16,6 +16,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -79,12 +81,16 @@ fun NovaMemoriaSheet(
             .background(colors.veu)
             .clickable(onClick = onDismiss),
     ) {
+        val fileteColor = colors.filete
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
                 .background(colors.fundo)
+                .drawBehind {
+                    drawLine(fileteColor, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx())
+                }
                 .clickable(enabled = false) {} // absorve toques para não fechar ao tocar dentro
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
@@ -115,7 +121,7 @@ fun NovaMemoriaSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column {
-                        Text("VALE POR", style = solarisText.meta, color = colors.textoSecundario)
+                        Text("VALE POR", style = solarisText.meta, color = colors.texto)
                         Text(ateQuando(dias), style = solarisText.corpo, color = colors.texto)
                     }
                     DiasStepper(dias = dias, onChange = { dias = it })
@@ -123,13 +129,15 @@ fun NovaMemoriaSheet(
                 HorizontalRule()
             }
 
-            Text("O QUE VOCÊ QUER LEMBRAR?", style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
+            Text("O QUE VOCÊ QUER LEMBRAR?", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .background(colors.superficie)
-                    .border(1.dp, colors.filete)
+                    .drawBehind {
+                        drawLine(colors.texto, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 2.dp.toPx())
+                    }
                     .padding(12.dp),
             ) {
                 BasicTextField(
@@ -147,7 +155,7 @@ fun NovaMemoriaSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
-                    Text("DATA DO EVENTO", style = solarisText.meta, color = colors.textoSecundario)
+                    Text("DATA DO EVENTO", style = solarisText.meta, color = colors.texto)
                     Text(dataEvento?.let { formatarDataEvento(it) } ?: "Não informada", style = solarisText.corpo, color = colors.texto)
                 }
                 OutlineChip(text = if (dataEvento != null) "Alterar" else "Definir", onClick = { mostrarSeletorData = true })
@@ -168,12 +176,12 @@ fun NovaMemoriaSheet(
                 Box(
                     modifier = Modifier
                         .size(20.dp)
-                        .background(if (sensivel) colors.texto else colors.fundo)
+                        .background(if (sensivel) colors.texto else colors.superficie)
                         .border(1.dp, colors.filete),
                 )
                 Column(modifier = Modifier.padding(start = 12.dp)) {
                     Text("Marcar como sensível", style = solarisText.corpo, color = colors.texto)
-                    Text("MASCARADA NAS RESPOSTAS", style = solarisText.meta, color = colors.textoSecundario)
+                    Text("MASCARADA NAS RESPOSTAS", style = solarisText.meta, color = colors.texto)
                 }
             }
 
@@ -219,7 +227,7 @@ fun NovaMemoriaSheet(
                         append(" no chat")
                     },
                     style = solarisText.meta,
-                    color = colors.textoSecundario,
+                    color = colors.texto,
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp, bottom = 8.dp),
                 )
             }
@@ -292,14 +300,14 @@ private fun DiasStepper(dias: Int, onChange: (Int) -> Unit) {
     val colors = LocalSolarisColors.current
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier.size(44.dp).border(1.dp, colors.filete).clickable(enabled = dias > 1) { onChange((dias - 1).coerceAtLeast(1)) },
+            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = dias > 1) { onChange((dias - 1).coerceAtLeast(1)) },
             contentAlignment = Alignment.Center,
         ) { Text("−", style = solarisText.tituloDialogo, color = colors.texto) }
 
         Text("$dias dia${if (dias == 1) "" else "s"}", style = solarisText.corpo.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = colors.texto, modifier = Modifier.padding(horizontal = 16.dp))
 
         Box(
-            modifier = Modifier.size(44.dp).border(1.dp, colors.filete).clickable(enabled = dias < 365) { onChange((dias + 1).coerceAtMost(365)) },
+            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = dias < 365) { onChange((dias + 1).coerceAtMost(365)) },
             contentAlignment = Alignment.Center,
         ) { Text("+", style = solarisText.tituloDialogo, color = colors.texto) }
     }
@@ -308,7 +316,7 @@ private fun DiasStepper(dias: Int, onChange: (Int) -> Unit) {
 @Composable
 private fun HorizontalRule(topPadding: androidx.compose.ui.unit.Dp = 0.dp) {
     val colors = LocalSolarisColors.current
-    Box(modifier = Modifier.fillMaxWidth().padding(top = topPadding).height(1.dp).background(colors.filete))
+    Box(modifier = Modifier.fillMaxWidth().padding(top = topPadding).height(1.dp).background(colors.divisoria))
 }
 
 private fun ateQuando(dias: Int): String {

@@ -26,8 +26,10 @@ import dev.solaris.memory.theme.solarisText
 fun AppearanceScreen(viewModel: AppViewModel) {
     val colors = LocalSolarisColors.current
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(16.dp)) {
-        Text("TEMA", style = solarisText.meta, color = colors.textoSecundario)
+    val tituloStyle = solarisText.meta.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+
+    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(20.dp)) {
+        Text("TEMA", style = tituloStyle, color = colors.texto)
         Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp).border(1.dp, colors.filete)) {
             SegmentoTema("Claro", viewModel.themeMode == ThemeMode.CLARO) { viewModel.updateThemeMode(ThemeMode.CLARO) }
             SegmentoTema("Escuro", viewModel.themeMode == ThemeMode.ESCURO) { viewModel.updateThemeMode(ThemeMode.ESCURO) }
@@ -38,8 +40,8 @@ fun AppearanceScreen(viewModel: AppViewModel) {
             modifier = Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("PALETA", style = solarisText.meta, color = colors.textoSecundario)
-            Text("OFICIAL: ESTAÇÃO", style = solarisText.meta, color = colors.textoSecundario)
+            Text("PALETA", style = tituloStyle, color = colors.texto)
+            Text("OFICIAL: ESTAÇÃO", style = solarisText.meta, color = colors.textoSuave)
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             for (palette in Palette.entries) {
@@ -47,18 +49,18 @@ fun AppearanceScreen(viewModel: AppViewModel) {
             }
         }
 
-        Text("ESTILOS IMPORTADOS", style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 28.dp, bottom = 8.dp))
+        Text("ESTILOS IMPORTADOS", style = tituloStyle, color = colors.texto, modifier = Modifier.padding(top = 28.dp, bottom = 8.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .dashedBorder(colors.filete)
+                .dashedBorder(colors.tracejado)
                 .padding(16.dp),
         ) {
             Text("Nenhum estilo importado ainda.", style = solarisText.corpo, color = colors.texto)
             Text(
                 "Um arquivo .json com as cinco cores (base, linha, papel, destaque e ação). O app confere o contraste antes de aplicar.",
                 style = solarisText.corpo,
-                color = colors.textoSecundario,
+                color = colors.textoSuave,
                 modifier = Modifier.padding(top = 8.dp),
             )
             OutlineChip(

@@ -13,7 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.components.ConfirmDialog
 import dev.solaris.memory.components.DangerButton
@@ -71,17 +74,23 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
     val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
     val isSensivel = memory.sensitivity == "SENSITIVE"
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(16.dp)) {
+    val tracejadoColor = colors.tracejado
+    val divisoriaColor = colors.divisoria
+
+    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(20.dp)) {
         Box {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.superficie)
-                    .border(1.dp, colors.filete)
-                    .padding(12.dp),
-            ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("TEXTO REGISTRADO", style = solarisText.meta, color = colors.textoSecundario)
+            Column(modifier = Modifier.fillMaxWidth().background(colors.superficie)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            drawLine(tracejadoColor, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+                        }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("TEXTO REGISTRADO", style = solarisText.meta, color = colors.texto)
                     Row {
                         Stamp(
                             when {
@@ -97,9 +106,14 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
                     }
                 }
                 if (isSensivel) {
-                    MaskedValue(memory.content, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                    MaskedValue(memory.content, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
                 } else {
-                    Text(memory.content, style = solarisText.destaqueFicha, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                    Text(
+                        memory.content,
+                        style = solarisText.destaqueFicha,
+                        color = colors.texto,
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 18.dp, bottom = 30.dp),
+                    )
                 }
             }
             Box(
@@ -115,26 +129,35 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
 
         val expiresAt = memory.expiresAt
         if (isTemporaria && !isVencida && expiresAt != null) {
-            HorizontalRule(topPadding = 20.dp)
-            Text("VENCE EM", style = solarisText.meta, color = colors.textoSecundario, modifier = Modifier.padding(top = 16.dp))
+            Spacer(Modifier.height(24.dp))
+            Text("VENCE EM", style = solarisText.meta, color = colors.texto)
             val (contagem, proporcao) = contagemRegressiva(memory.createdAt, expiresAt)
             Text(contagem, style = solarisText.contador, color = colors.texto, modifier = Modifier.padding(top = 4.dp))
             Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(colors.trilho).padding(top = 8.dp)) {
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(proporcao.coerceIn(0f, 1f)).background(colors.acao))
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(proporcao.coerceIn(0f, 1f)).background(colors.texto))
             }
             Text(
                 "Até ${formatarDataHora(expiresAt)}. Depois disso, não entra mais nas respostas.",
-                style = solarisText.corpo,
+                style = solarisText.corpo.copy(fontSize = 15.sp),
                 color = colors.texto,
                 modifier = Modifier.padding(top = 12.dp),
             )
         }
 
-        HorizontalRule(topPadding = 20.dp)
-        MetaRow("REGISTRADA", formatarDataHora(memory.createdAt))
-        MetaRow("EVENTO", memory.eventAt?.let { formatarDataHora(it) } ?: "Não informado")
-        MetaRow("ATUALIZADA", if (memory.updatedAt != memory.createdAt) formatarDataHora(memory.updatedAt) else "—")
-        MetaRow("STATUS", if (isVencida) "Vencida" else "Ativa")
+        Spacer(Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBehind {
+                    drawLine(divisoriaColor, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx())
+                }
+                .padding(top = 18.dp),
+        ) {
+            MetaRow("REGISTRADA", formatarDataHora(memory.createdAt))
+            MetaRow("EVENTO", memory.eventAt?.let { formatarDataHora(it) } ?: "Não informado")
+            MetaRow("ATUALIZADA", if (memory.updatedAt != memory.createdAt) formatarDataHora(memory.updatedAt) else "—")
+            MetaRow("STATUS", if (isVencida) "Vencida" else "Ativa")
+        }
 
         Spacer(Modifier.weight(1f))
 
@@ -150,18 +173,12 @@ private fun MemoryDetailContent(memory: MemoryResponse, onPedirExclusao: () -> U
 private fun MetaRow(label: String, valor: String) {
     val colors = LocalSolarisColors.current
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = solarisText.meta, color = colors.textoSecundario)
-        Text(valor, style = solarisText.corpo, color = colors.texto)
+        Text(label, style = solarisText.meta, color = colors.texto)
+        Text(valor, style = solarisText.corpo.copy(fontSize = 15.sp), color = colors.texto)
     }
-}
-
-@Composable
-private fun HorizontalRule(topPadding: androidx.compose.ui.unit.Dp = 0.dp) {
-    val colors = LocalSolarisColors.current
-    Box(modifier = Modifier.fillMaxWidth().padding(top = topPadding).height(1.dp).background(colors.filete))
 }
 
 private fun formatarDataHora(iso: String): String {

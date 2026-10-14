@@ -7,6 +7,7 @@ import dev.solaris.memory.network.ApiClient
 import dev.solaris.memory.network.ChatQueryResponse
 import dev.solaris.memory.network.CreateMemoryRequest
 import dev.solaris.memory.network.MemoryResponse
+import dev.solaris.memory.network.SourceRef
 import dev.solaris.memory.network.UpdateMemoryRequest
 import dev.solaris.memory.network.randomRequestId
 import dev.solaris.memory.settings.AppSettings
@@ -18,7 +19,15 @@ import kotlinx.datetime.toLocalDateTime
 
 enum class ChatRole { USER, ASSISTANT }
 
-data class ChatEntry(val role: ChatRole, val text: String, val horario: String, val caption: String? = null, val sensivel: Boolean = false)
+data class ChatEntry(
+    val role: ChatRole,
+    val text: String,
+    val horario: String,
+    val caption: String? = null,
+    val sensivel: Boolean = false,
+    /** HANDOFF.md v1.1 "Linha de fonte" — presente só nas respostas a perguntas, não nas confirmações de gravação. */
+    val fonte: SourceRef? = null,
+)
 
 /** NovaMemoriaSheet (telas 04/06) reports the form's resolved state, used verbatim both to create and to edit a memory. */
 data class NovaMemoriaFormResultado(
@@ -225,9 +234,8 @@ class AppViewModel(private val settings: AppSettings) {
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())
                     val melhorFonte = response.sources.firstOrNull()
-                    val caption = melhorFonte?.let { "fonte: ${it.date}" }
                     val sensivel = melhorFonte?.sensitivity == "SENSITIVE"
-                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), caption, sensivel)
+                    chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, response.answer, agora(), sensivel = sensivel, fonte = melhorFonte)
                     response.warnings.forEach { warning ->
                         chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "aviso: $warning", agora())
                     }
