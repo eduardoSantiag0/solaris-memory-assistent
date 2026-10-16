@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,10 +60,13 @@ fun NovaMemoriaSheet(
     val colors = LocalSolarisColors.current
     val scope = rememberCoroutineScope()
 
+    // Correção 15/10: "nova memória" começava marcada como Temporária por
+    // padrão — fácil de perder um registro achando que ficaria salvo pra
+    // sempre. Permanente é o padrão mais seguro pro caso de uso típico.
     var tipo by remember {
         mutableStateOf(
             when {
-                editando == null -> TipoMemoria.TEMPORARIA
+                editando == null -> TipoMemoria.PERMANENTE
                 editando.expiresAt == null -> TipoMemoria.PERMANENTE
                 else -> TipoMemoria.TEMPORARIA
             },
@@ -138,14 +143,16 @@ fun NovaMemoriaSheet(
                     .drawBehind {
                         drawLine(colors.texto, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 2.dp.toPx())
                     }
-                    .padding(12.dp),
+                    .padding(12.dp)
+                    .verticalScroll(rememberScrollState()),
             ) {
                 BasicTextField(
                     value = conteudo,
                     onValueChange = { conteudo = it; erro = null },
                     textStyle = solarisText.corpo.copy(color = colors.texto),
                     cursorBrush = SolidColor(colors.texto),
-                    modifier = Modifier.fillMaxSize(),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
@@ -298,18 +305,20 @@ private fun TipoCard(titulo: String, descricao: String, selecionado: Boolean, on
 @Composable
 private fun DiasStepper(dias: Int, onChange: (Int) -> Unit) {
     val colors = LocalSolarisColors.current
+    val podeDiminuir = dias > 1
+    val podeAumentar = dias < 365
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = dias > 1) { onChange((dias - 1).coerceAtLeast(1)) },
+            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = podeDiminuir) { onChange((dias - 1).coerceAtLeast(1)) },
             contentAlignment = Alignment.Center,
-        ) { Text("−", style = solarisText.tituloDialogo, color = colors.texto) }
+        ) { Text("−", style = solarisText.tituloDialogo, color = if (podeDiminuir) colors.texto else colors.textoSuave) }
 
         Text("$dias dia${if (dias == 1) "" else "s"}", style = solarisText.corpo.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = colors.texto, modifier = Modifier.padding(horizontal = 16.dp))
 
         Box(
-            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = dias < 365) { onChange((dias + 1).coerceAtMost(365)) },
+            modifier = Modifier.size(44.dp).background(colors.preenchimento).clickable(enabled = podeAumentar) { onChange((dias + 1).coerceAtMost(365)) },
             contentAlignment = Alignment.Center,
-        ) { Text("+", style = solarisText.tituloDialogo, color = colors.texto) }
+        ) { Text("+", style = solarisText.tituloDialogo, color = if (podeAumentar) colors.texto else colors.textoSuave) }
     }
 }
 

@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,7 +30,13 @@ fun AppearanceScreen(viewModel: AppViewModel) {
 
     val tituloStyle = solarisText.meta.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(20.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.fundo)
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+    ) {
         Text("TEMA", style = tituloStyle, color = colors.texto)
         Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp).border(1.dp, colors.filete)) {
             SegmentoTema("Claro", viewModel.themeMode == ThemeMode.CLARO) { viewModel.updateThemeMode(ThemeMode.CLARO) }

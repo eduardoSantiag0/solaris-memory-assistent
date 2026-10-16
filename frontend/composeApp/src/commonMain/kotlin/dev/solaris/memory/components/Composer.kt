@@ -3,7 +3,10 @@ package dev.solaris.memory.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
@@ -35,19 +39,23 @@ fun Composer(
 ) {
     val colors = LocalSolarisColors.current
     val baseColor = colors.texto
-    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
         IconSquareButton(SolarisIcon.NOVA, "Nova memória", onNovaMemoria, preenchido = true)
 
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(FIELD_HEIGHT)
+                // Pedido do usuário em 15/10: o campo cresce pra baixo conforme o
+                // texto quebra linha, até um teto (depois disso rola por dentro)
+                // em vez de ficar travado numa linha só de 44dp.
+                .heightIn(min = FIELD_HEIGHT, max = 160.dp)
                 .padding(horizontal = 8.dp)
                 .background(colors.superficie)
                 .drawBehind {
                     drawLine(baseColor, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 2.dp.toPx())
                 }
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .verticalScroll(rememberScrollState()),
             contentAlignment = Alignment.CenterStart,
         ) {
             if (value.isEmpty()) {
@@ -58,7 +66,8 @@ fun Composer(
                 onValueChange = onValueChange,
                 textStyle = solarisText.corpo.copy(color = colors.texto),
                 cursorBrush = SolidColor(colors.texto),
-                singleLine = true,
+                singleLine = false,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -84,6 +93,8 @@ fun SolarisTextField(
     modifier: Modifier = Modifier,
     icon: SolarisIcon? = null,
     singleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
 ) {
     val colors = LocalSolarisColors.current
     val baseColor = colors.texto
@@ -112,6 +123,8 @@ fun SolarisTextField(
                 textStyle = solarisText.corpo.copy(color = colors.texto),
                 cursorBrush = SolidColor(colors.texto),
                 singleLine = singleLine,
+                keyboardOptions = keyboardOptions,
+                visualTransformation = visualTransformation,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

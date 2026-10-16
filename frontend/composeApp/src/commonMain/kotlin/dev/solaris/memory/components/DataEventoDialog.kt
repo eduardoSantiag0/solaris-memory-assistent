@@ -100,6 +100,7 @@ fun DataEventoDialog(
     }
 }
 
+/** Passa de min pra max e vice-versa de propósito (mostrador de relógio: 23h+1 -> 0h faz sentido), diferente do DiasStepper, que trava nas pontas. */
 @Composable
 private fun NumeroStepper(
     valor: Int,

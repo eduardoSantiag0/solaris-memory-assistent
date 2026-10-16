@@ -35,18 +35,28 @@ fun SolarisTheme(palette: Palette, mode: ThemeMode, content: @Composable () -> U
     val colors = solarisColors(palette, dark)
     val textStyles = solarisTextStyles()
 
+    // Além dos papéis originais: DataEventoDialog usa o DatePicker padrão
+    // do Material (único widget não desenhado à mão no app) — sem esses
+    // papéis extra ele cai nas cores roxas padrão do Material, destoando
+    // forte da paleta escolhida (achado do audit de UI 15/10).
     val materialColors = if (dark) {
         darkColorScheme(
-            primary = colors.acao, secondary = colors.usuario,
+            primary = colors.acao, onPrimary = colors.textoSobreAcao,
+            secondary = colors.usuario, onSecondary = colors.textoSobreUsuario,
             background = colors.fundo, surface = colors.superficie,
             onBackground = colors.texto, onSurface = colors.texto,
+            surfaceVariant = colors.preenchimento, onSurfaceVariant = colors.textoSecundario,
+            outline = colors.filete, outlineVariant = colors.divisoria,
             error = colors.acao,
         )
     } else {
         lightColorScheme(
-            primary = colors.acao, secondary = colors.usuario,
+            primary = colors.acao, onPrimary = colors.textoSobreAcao,
+            secondary = colors.usuario, onSecondary = colors.textoSobreUsuario,
             background = colors.fundo, surface = colors.superficie,
             onBackground = colors.texto, onSurface = colors.texto,
+            surfaceVariant = colors.preenchimento, onSurfaceVariant = colors.textoSecundario,
+            outline = colors.filete, outlineVariant = colors.divisoria,
             error = colors.acao,
         )
     }

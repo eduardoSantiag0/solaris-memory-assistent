@@ -22,6 +22,7 @@ import dev.solaris.memory.components.AssistantMessageBody
 import dev.solaris.memory.components.AssistantMessageMeta
 import dev.solaris.memory.components.ComandoAutocomplete
 import dev.solaris.memory.components.Composer
+import dev.solaris.memory.components.MaskedValue
 import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SavedMessage
 import dev.solaris.memory.components.SourceLink
@@ -57,13 +58,17 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colors.fundo)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .background(colors.fundo),
         ) {
+            // A textura precisa cobrir a área rolável inteira, até as bordas
+            // da tela — por isso o padding de 20/16dp vira contentPadding da
+            // LazyColumn (dentro do Box com a textura) em vez de padding do
+            // Column (que deixaria uma faixa sem textura nas margens).
             Box(modifier = Modifier.weight(1f).fillMaxWidth().ditherConversa(colors.textura)) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(28.dp),
             ) {
                 itemsIndexed(viewModel.chatHistory) { index, entry ->
@@ -85,10 +90,15 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                                 val fonte = entry.fonte
                                 if (entry.salva) {
                                     SavedMessage(entry.text)
+                                } else if (fonte?.sensitivity == "SENSITIVE") {
+                                    // Pedido do usuário em 15/10: mascara no chat também, mas
+                                    // sem pedir biometria de novo (só o toque em Revelar) —
+                                    // diferente do gate de Memórias/Detalhe. A frase "segundo o
+                                    // que você registrou..." fica fora da caixa (não é parte do
+                                    // valor mascarado); dentro só o conteúdo literal da memória.
+                                    Text("Segundo o que você registrou ${relativo(fonte.date)}.", style = solarisText.meta, color = colors.textoSecundario)
+                                    MaskedValue(entry.text, viewModel, requireAuth = false)
                                 } else {
-                                    // Pedido explícito do usuário: respostas sensíveis aparecem
-                                    // na conversa como texto normal, sem máscara nem gate de
-                                    // biometria/senha — essa proteção fica só em Memórias/Detalhe.
                                     AssistantMessageBody(respostaConversacional(entry.text, fonte))
                                 }
                                 if (entry.fontesConflito.isNotEmpty()) {
@@ -115,7 +125,7 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                 ComandoAutocomplete(
                     input = input,
                     onSelecionar = { input = it },
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
                 )
             }
 
@@ -128,7 +138,7 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                     input = ""
                     scope.launch { viewModel.sendChatInput(toSend) }
                 },
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
             )
         }
 

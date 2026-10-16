@@ -3,11 +3,14 @@ package dev.solaris.memory.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,7 @@ import dev.solaris.memory.components.StampType
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.solarisText
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -37,7 +41,9 @@ import kotlinx.datetime.toLocalDateTime
 @Composable
 fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExcluido: () -> Unit) {
     var confirmandoExclusao by remember { mutableStateOf(false) }
+    var excluindo by remember { mutableStateOf(false) }
     var editando by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     MemoryDetailContent(memory, viewModel, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true })
 
@@ -52,8 +58,23 @@ fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExclui
         ConfirmDialog(
             titulo = "Excluir esta ficha?",
             texto = texto,
-            confirmarLabel = "Excluir",
-            onConfirmar = { confirmandoExclusao = false; onExcluido() },
+            // Correção 15/10: antes a tela já voltava pra lista e disparava
+            // a exclusão em paralelo sem esperar — uma falha de rede/servidor
+            // passava batida, parecendo sucesso. Agora só navega de volta
+            // (onExcluido) depois de confirmar que excluiu de verdade;
+            // falha fica visível pelo banner de statusMessage em App.kt.
+            confirmarLabel = if (excluindo) "Excluindo..." else "Excluir",
+            onConfirmar = {
+                if (!excluindo) {
+                    excluindo = true
+                    scope.launch {
+                        val sucesso = viewModel.deleteMemory(memory.id)
+                        excluindo = false
+                        confirmandoExclusao = false
+                        if (sucesso) onExcluido()
+                    }
+                }
+            },
             onCancelar = { confirmandoExclusao = false },
         )
     }
@@ -77,21 +98,29 @@ private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel,
     val tracejadoColor = colors.tracejado
     val divisoriaColor = colors.divisoria
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.fundo).padding(20.dp)) {
+    // Pedido do usuário em 15/10: "ainda não consigo editar ou excluir
+    // memórias permanentes" — causa real era este Column não rolar: texto
+    // registrado grande (destaqueFicha, 23sp) + metadados empurravam os
+    // botões Editar/Excluir além do fim da tela, sem jeito de alcançá-los.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.fundo)
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+    ) {
         Box {
             Column(modifier = Modifier.fillMaxWidth().background(colors.superficie)) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .drawBehind {
                             drawLine(tracejadoColor, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
                         }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text("TEXTO REGISTRADO", style = solarisText.meta, color = colors.texto)
-                    Row {
+                    Row(modifier = Modifier.padding(top = 6.dp)) {
                         Stamp(
                             when {
                                 isVencida -> StampType.VENCIDA
@@ -159,9 +188,9 @@ private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel,
             MetaRow("STATUS", if (isVencida) "Vencida" else "Ativa")
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(32.dp))
 
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 20.dp)) {
             SecondaryButton(text = "Editar", onClick = onEditar, modifier = Modifier.weight(1f))
             Spacer(Modifier.width(12.dp))
             DangerButton(text = "Excluir", onClick = onPedirExclusao, modifier = Modifier.weight(1f))

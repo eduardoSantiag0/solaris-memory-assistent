@@ -1,6 +1,7 @@
 package dev.solaris.memory.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,14 +31,17 @@ private const val REVEAL_SECONDS = 30
  * on Desktop (no biometric hardware), the account password. See
  * components/SensitiveGate.kt and its .android/.desktop actuals.
  *
- * Correções 14/10 item 4: sem painel ao redor do bloco inteiro — só o
- * valor/máscara carrega `preenchimento`, numa linha com o botão Revelar; o
- * meta "SENSÍVEL · PEDE BIOMETRIA" fica fora de qualquer caixa, com o
- * cadeado em `acao`. Depois de revelar (tela 12), aí sim o valor e a
- * contagem regressiva vivem numa superfície `preenchimento`.
+ * Painel com borda ao redor do bloco inteiro (valor/máscara + meta), pedido
+ * do usuário em 15/10 — volta ao formato com contorno visível em vez do
+ * bloco "flutuante" sem caixa.
+ *
+ * `requireAuth` controla se o botão Revelar passa pelo gate de
+ * biometria/senha (Memórias/Detalhe, `true`) ou libera direto (chat, `false`
+ * — pedido do usuário em 15/10: no chat é só mascarar + exigir toque em
+ * Revelar, sem pedir biometria de novo).
  */
 @Composable
-fun MaskedValue(value: String, viewModel: AppViewModel, modifier: Modifier = Modifier) {
+fun MaskedValue(value: String, viewModel: AppViewModel, modifier: Modifier = Modifier, requireAuth: Boolean = true) {
     val colors = LocalSolarisColors.current
     var revelado by remember { mutableStateOf(false) }
     var segundosRestantes by remember { mutableStateOf(REVEAL_SECONDS) }
@@ -54,7 +58,12 @@ fun MaskedValue(value: String, viewModel: AppViewModel, modifier: Modifier = Mod
         revelado = false
     }
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val legenda = if (requireAuth) "SENSÍVEL · PEDE BIOMETRIA" else "SENSÍVEL · TOQUE PARA REVELAR"
+
+    Column(
+        modifier = modifier.fillMaxWidth().border(1.dp, colors.filete),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         if (revelado) {
             Column(modifier = Modifier.fillMaxWidth().background(colors.preenchimento)) {
                 Row(
@@ -83,22 +92,30 @@ fun MaskedValue(value: String, viewModel: AppViewModel, modifier: Modifier = Mod
                 )
             }
         } else {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    MASCARA_FIXA,
-                    style = solarisText.comando.copy(fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 1.sp),
-                    color = colors.texto,
-                    modifier = Modifier.background(colors.preenchimento).padding(horizontal = 12.dp, vertical = 10.dp),
-                )
-                MonoOutlineChip(
-                    text = "Revelar",
-                    icon = SolarisIcon.REVELAR,
-                    onClick = { scope.launch { if (autenticar()) revelado = true } },
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                SolarisIconGlyph(SolarisIcon.SENSIVEL, colors.acao, size = 14.dp)
-                Text("SENSÍVEL · PEDE BIOMETRIA", style = solarisText.meta, color = colors.texto)
+            Column(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        MASCARA_FIXA,
+                        style = solarisText.comando.copy(fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 1.sp),
+                        color = colors.texto,
+                        modifier = Modifier.background(colors.preenchimento).padding(horizontal = 12.dp, vertical = 10.dp),
+                    )
+                    MonoOutlineChip(
+                        text = "Revelar",
+                        icon = SolarisIcon.REVELAR,
+                        onClick = {
+                            if (requireAuth) {
+                                scope.launch { if (autenticar()) revelado = true }
+                            } else {
+                                revelado = true
+                            }
+                        },
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SolarisIconGlyph(SolarisIcon.SENSIVEL, colors.acao, size = 14.dp)
+                    Text(legenda, style = solarisText.meta, color = colors.texto)
+                }
             }
         }
     }

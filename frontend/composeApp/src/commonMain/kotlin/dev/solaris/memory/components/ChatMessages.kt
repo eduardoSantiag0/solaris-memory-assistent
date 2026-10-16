@@ -1,7 +1,10 @@
 package dev.solaris.memory.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,21 +17,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.solarisText
 
+/** Segurar uma mensagem (própria ou do Solaris) copia o texto — pedido do usuário em 15/10. */
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.copyOnLongPress(texto: String, clipboard: androidx.compose.ui.platform.ClipboardManager): Modifier = this.combinedClickable(
+    onClick = {},
+    onLongClick = { clipboard.setText(AnnotatedString(texto)) },
+)
+
 /** HANDOFF.md 02-chat: bloco à direita, fundo `usuario`, largura máx. 80%, comandos em mono 600. */
 @Composable
 fun UserMessage(text: String, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
+    val clipboard = LocalClipboardManager.current
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         Column(
             modifier = Modifier
                 .widthIn(max = 320.dp)
                 .background(colors.usuario)
+                .border(1.dp, colors.filete)
+                .copyOnLongPress(text, clipboard)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             val isCommand = text.startsWith("/add")
@@ -61,7 +76,8 @@ fun AssistantMessageMeta(horario: String, modifier: Modifier = Modifier) {
 @Composable
 fun AssistantMessageBody(text: String, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
-    Text(text, style = solarisText.corpo, color = colors.texto, modifier = modifier)
+    val clipboard = LocalClipboardManager.current
+    Text(text, style = solarisText.corpo, color = colors.texto, modifier = modifier.copyOnLongPress(text, clipboard))
 }
 
 /**
@@ -72,8 +88,9 @@ fun AssistantMessageBody(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun SavedMessage(text: String, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
+    val clipboard = LocalClipboardManager.current
     val corBandeira = if (colors.dark) colors.usuario else colors.acao
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(modifier = modifier.copyOnLongPress(text, clipboard), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Canvas(modifier = Modifier.padding(top = 4.dp).size(width = 12.dp, height = 16.dp)) {
             val path = Path().apply {
                 moveTo(0f, 0f)

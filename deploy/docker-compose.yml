@@ -32,6 +32,23 @@ services:
         ipv4_address: 172.28.0.4
     # No "ports:" — only reachable from other containers on this network.
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: solaris_ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: "0.0.0.0"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Cota de memória: a VM é pequena (954MB RAM + swap de 2GB, ver
+    # deploy/README.md) e sem este limite o Ollama pode tomar memória que
+    # faltaria pro Postgres/backend. Só a API de embeddings, nunca exposta
+    # ao host — alcançável apenas por `backend` via rede interna.
+    mem_limit: 700m
+    networks:
+      internal:
+        ipv4_address: 172.28.0.5
+
   backend:
     build:
       context: ../backend
@@ -50,8 +67,14 @@ services:
       APP_USER: ${APP_USER}
       APP_PASSWORD_HASH: ${APP_PASSWORD_HASH}
       APP_EMBEDDINGS_ENABLED: ${APP_EMBEDDINGS_ENABLED:-false}
+      APP_EMBEDDINGS_PROVIDER: ${APP_EMBEDDINGS_PROVIDER:-ollama}
+      APP_EMBEDDINGS_DIMENSIONS: ${APP_EMBEDDINGS_DIMENSIONS:-768}
+      APP_EMBEDDINGS_MAX_DISTANCE: ${APP_EMBEDDINGS_MAX_DISTANCE:-0.42}
+      APP_EMBEDDINGS_SEMANTIC_MARGIN: ${APP_EMBEDDINGS_SEMANTIC_MARGIN:-0.02}
       # Only read at all if embeddings are enabled.
       APP_OLLAMA_URL: ${APP_OLLAMA_URL:-http://host.docker.internal:11434}
+      APP_GEMINI_ENABLED: ${APP_GEMINI_ENABLED:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       # Oracle's Always Free VM is modest (and single-user per doc PRE-05) —
       # a JVM that autodetects the host's full core count spends threads on
       # GC/JIT it doesn't need, and Tomcat defaults to a 200-thread pool.
@@ -106,3 +129,4 @@ networks:
 volumes:
   postgres-data:
   wireguard-config:
+  ollama-data:

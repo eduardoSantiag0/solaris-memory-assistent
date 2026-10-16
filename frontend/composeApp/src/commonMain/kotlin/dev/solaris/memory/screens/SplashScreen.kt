@@ -15,13 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.solaris.memory.components.SolarisLogoSprite
 import dev.solaris.memory.theme.plexMono
 import dev.solaris.memory.theme.plexSans
 
@@ -51,7 +50,11 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            ReflexoSprite(modifier = Modifier.size(width = 200.dp, height = 150.dp))
+            SolarisLogoSprite(
+                modifier = Modifier.size(width = 200.dp, height = 150.dp),
+                corPlaneta = LOGO_GOLD,
+                corTraco = LOGO_PAPER,
+            )
             Spacer(Modifier.height(28.dp))
             Text(
                 "solaris",
@@ -104,32 +107,5 @@ private fun BarraBuscando() {
         val segmento = size.width * 0.3f
         val x = size.width * posicao
         drawLine(LOGO_GOLD, Offset(x, 0f), Offset((x + segmento).coerceAtMost(size.width), 0f), strokeWidth = 1.dp.toPx())
-    }
-}
-
-/** Planeta + horizonte + reflexo ondulando + duas estrelas — mesma geometria de assets/reflexo.gif, em escala maior que o símbolo do cabeçalho. */
-@Composable
-private fun ReflexoSprite(modifier: Modifier = Modifier) {
-    val transicao = rememberInfiniteTransition(label = "reflexo")
-    val onda by transicao.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(1800, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
-        label = "onda",
-    )
-    Canvas(modifier = modifier) {
-        val k = this.size.width / 256f
-        fun off(x: Float, y: Float) = Offset(x * k, y * k)
-
-        drawCircle(LOGO_GOLD, radius = 24f * k, center = off(100f, 48f))
-        drawRect(LOGO_PAPER, topLeft = off(188f, 20f), size = Size(6f * k, 6f * k))
-        drawRect(LOGO_PAPER, topLeft = off(206f, 38f), size = Size(5f * k, 5f * k))
-        drawLine(LOGO_PAPER, off(0f, 80f), off(256f, 80f), strokeWidth = 2.5f * k, cap = StrokeCap.Square)
-
-        val deslocamento = (10f * onda) * k
-        drawRect(LOGO_GOLD.copy(alpha = 0.7f), topLeft = off(32f + deslocamento, 92f), size = Size(90f * k, 8f * k))
-        drawRect(LOGO_GOLD.copy(alpha = 0.55f), topLeft = off(78f - deslocamento, 108f), size = Size(48f * k, 6f * k))
-        drawRect(LOGO_GOLD.copy(alpha = 0.4f), topLeft = off(58f + deslocamento, 122f), size = Size(70f * k, 6f * k))
-        drawRect(LOGO_GOLD.copy(alpha = 0.3f), topLeft = off(90f - deslocamento, 136f), size = Size(40f * k, 6f * k))
     }
 }

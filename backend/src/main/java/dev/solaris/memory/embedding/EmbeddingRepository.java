@@ -39,19 +39,24 @@ public class EmbeddingRepository {
         });
     }
 
+    /** id + cosine distance to the query vector — EmbeddingService needs the actual distance for the relative-margin check, not just the id (achado 15/10). */
+    public record ScoredId(UUID id, double distance) {
+    }
+
     /**
      * Active (not deleted, not expired), non-null-embedding candidates
      * ordered by cosine distance to the query vector, closest first — and
      * discarded past {@code maxDistance} (Correções 14/10 item 1, RF-04):
      * the "nearest" candidate is still worthless if nothing is actually
      * related, so the cutoff has to happen in the query itself, not just
-     * by taking fewer results.
+     * by taking fewer results. This is now only a coarse sanity ceiling —
+     * EmbeddingService applies the finer relative-margin cut on top.
      */
-    public List<UUID> findNearestActiveIds(Instant now, float[] queryEmbedding, int limit, double maxDistance) {
-        return jdbcTemplate.execute((ConnectionCallback<List<UUID>>) conn -> {
+    public List<ScoredId> findNearestActiveIds(Instant now, float[] queryEmbedding, int limit, double maxDistance) {
+        return jdbcTemplate.execute((ConnectionCallback<List<ScoredId>>) conn -> {
             PGvector.registerTypes(conn);
             String sql = """
-                    select id from memories
+                    select id, embedding <=> ? as distance from memories
                     where status <> 'DELETED'
                       and (expires_at is null or expires_at > ?)
                       and embedding is not null
@@ -60,15 +65,16 @@ public class EmbeddingRepository {
                     limit ?
                     """;
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setObject(1, java.sql.Timestamp.from(now));
-                ps.setObject(2, new PGvector(queryEmbedding));
-                ps.setDouble(3, maxDistance);
-                ps.setObject(4, new PGvector(queryEmbedding));
-                ps.setInt(5, limit);
-                List<UUID> ids = new ArrayList<>();
+                ps.setObject(1, new PGvector(queryEmbedding));
+                ps.setObject(2, java.sql.Timestamp.from(now));
+                ps.setObject(3, new PGvector(queryEmbedding));
+                ps.setDouble(4, maxDistance);
+                ps.setObject(5, new PGvector(queryEmbedding));
+                ps.setInt(6, limit);
+                List<ScoredId> ids = new ArrayList<>();
                 try (var rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        ids.add((UUID) rs.getObject("id"));
+                        ids.add(new ScoredId((UUID) rs.getObject("id"), rs.getDouble("distance")));
                     }
                 }
                 return ids;

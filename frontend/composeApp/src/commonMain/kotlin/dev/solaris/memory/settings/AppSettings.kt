@@ -25,6 +25,8 @@ class AppSettings(private val settings: Settings) {
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_TOKEN = "auth_token"
         private const val KEY_USERNAME = "auth_username"
+        private const val KEY_REQUIRE_BIOMETRIC_ON_OPEN = "require_biometric_on_open"
+        private const val KEY_BLOCK_SCREENSHOTS = "block_screenshots"
 
         private const val DEFAULT_SERVER_URL = "http://localhost:8080"
     }
@@ -55,6 +57,16 @@ class AppSettings(private val settings: Settings) {
         set(value) {
             if (value == null) settings.remove(KEY_USERNAME) else settings.putString(KEY_USERNAME, value)
         }
+
+    /** Ajustes > Privacidade — gate de biometria/senha reaproveitando SensitiveGate, agora exigido também ao abrir o app, não só ao revelar um valor. */
+    var requireBiometricOnOpen: Boolean
+        get() = settings.getBoolean(KEY_REQUIRE_BIOMETRIC_ON_OPEN, true)
+        set(value) = settings.putBoolean(KEY_REQUIRE_BIOMETRIC_ON_OPEN, value)
+
+    /** Ajustes > Privacidade — FLAG_SECURE no Android (components/ScreenshotGuard.android.kt); sem efeito no Desktop, não há API equivalente ali. */
+    var blockScreenshots: Boolean
+        get() = settings.getBoolean(KEY_BLOCK_SCREENSHOTS, true)
+        set(value) = settings.putBoolean(KEY_BLOCK_SCREENSHOTS, value)
 }
 
 expect fun createPlatformSettings(): Settings

@@ -56,7 +56,7 @@ fun solarisTextStyles(): SolarisTextStyles {
         tituloTela = TextStyle(fontFamily = mono, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, letterSpacing = 1.sp),
         tituloDialogo = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 22.sp),
         tituloFolha = TextStyle(fontFamily = mono, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
-        corpo = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 17.sp, lineHeight = 1.45.em),
+        corpo = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 1.45.em),
         destaqueFicha = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 23.sp, lineHeight = 1.35.em),
         comando = TextStyle(fontFamily = mono, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
         meta = TextStyle(fontFamily = mono, fontWeight = FontWeight.Normal, fontSize = 13.sp, letterSpacing = 0.4.sp),

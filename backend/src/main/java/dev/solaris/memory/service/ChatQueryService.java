@@ -145,7 +145,8 @@ public class ChatQueryService {
         List<Scored> scored = new ArrayList<>();
         for (Memory candidate : repository.findActiveCandidates(now)) {
             String lowerContent = candidate.getContent().toLowerCase();
-            long score = terms.stream().filter(lowerContent::contains).count();
+            List<String> contentWords = extractTerms(lowerContent);
+            long score = terms.stream().filter(term -> matchesTerm(term, lowerContent, contentWords)).count();
             if (score > 0) {
                 scored.add(new Scored(candidate, score));
             }
@@ -161,6 +162,57 @@ public class ChatQueryService {
     }
 
     private record Scored(Memory memory, long score) {
+    }
+
+    /**
+     * Pedido do usuário em 15/10: um typo na pergunta ("apartamrnto" por
+     * "apartamento") não pode fazer a busca por texto exato falhar e cair
+     * silenciosamente num "não encontrei" — nem toda instância tem Ollama
+     * ligado para a busca semântica cobrir esse caso. Tolerância por
+     * distância de edição (Levenshtein) contra cada palavra do conteúdo,
+     * além do `contains` exato já existente (que ainda cobre
+     * prefixos/plurais como "apartamento" dentro de "apartamentos").
+     */
+    private boolean matchesTerm(String term, String lowerContent, List<String> contentWords) {
+        if (lowerContent.contains(term)) {
+            return true;
+        }
+        int threshold = typoThreshold(term.length());
+        if (threshold == 0) {
+            return false;
+        }
+        for (String word : contentWords) {
+            if (Math.abs(word.length() - term.length()) <= threshold && levenshtein(term, word) <= threshold) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int typoThreshold(int termLength) {
+        if (termLength <= 4) {
+            return 0; // termos curtos têm poucos caracteres para "sobrar" margem sem gerar falso positivo
+        }
+        return termLength <= 7 ? 1 : 2;
+    }
+
+    private int levenshtein(String a, String b) {
+        int[] prev = new int[b.length() + 1];
+        int[] curr = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) {
+            prev[j] = j;
+        }
+        for (int i = 1; i <= a.length(); i++) {
+            curr[0] = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                curr[j] = Math.min(Math.min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            int[] tmp = prev;
+            prev = curr;
+            curr = tmp;
+        }
+        return prev[b.length()];
     }
 
     private boolean isConversational(String lowerQuestion) {

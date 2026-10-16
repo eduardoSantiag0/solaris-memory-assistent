@@ -47,9 +47,21 @@ app:
     # falls back to M1's plain text search either way (RF-05 never lets
     # vector similarity override an exact/text match regardless of this flag).
     enabled: ${APP_EMBEDDINGS_ENABLED:true}
+    # "ollama" (local) ou "gemini" (pedido do usuário 15/10 — embeddings
+    # assimétricos document/query via GEMINI_API_KEY, mesma chave usada
+    # pelo app.gemini.* abaixo). Trocar de provider invalida os embeddings
+    # já salvos (espaços vetoriais diferentes) — rode POST /api/v1/admin/
+    # reembed depois de trocar.
+    provider: ${APP_EMBEDDINGS_PROVIDER:ollama}
     ollama-base-url: ${APP_OLLAMA_URL:http://localhost:11434}
     model: ${APP_EMBEDDINGS_MODEL:nomic-embed-text}
-    dimensions: 768
+    # Must match the DB column (V2/V3 migrations) and whatever the active
+    # provider actually outputs — Ollama/nomic-embed-text is fixed at 768;
+    # Gemini needs APP_EMBEDDINGS_DIMENSIONS=1536 (see V3 migration notes:
+    # pgvector's HNSW index caps at 2000 dims, so the model's native 3072
+    # isn't an option, and the truncated 768 measurably hurt separation
+    # between related/unrelated short texts in local testing 15/10).
+    dimensions: ${APP_EMBEDDINGS_DIMENSIONS:768}
     # Correções 14/10 item 1 (RF-04/CT-05/CT-13): cosine distance above this
     # is treated as "not actually related" and discarded, so an unrelated
     # question never surfaces the "closest, but still wrong" memory. 0.42
@@ -57,8 +69,29 @@ app:
     # nomic-embed-text model (see calibration notes in ChatQueryServiceTest) —
     # it is a pragmatic cutoff for this specific small model and short
     # Portuguese sentences, not a universal guarantee; thematically adjacent
-    # but unrelated pairs can still occasionally slip through.
+    # but unrelated pairs can still occasionally slip through. Acts as a
+    # coarse sanity ceiling now; semantic-margin below does the fine-grained
+    # disambiguation (needed for Gemini — see its own comment).
     max-distance: ${APP_EMBEDDINGS_MAX_DISTANCE:0.42}
+    # Achado 15/10: com o Gemini, até conteúdo totalmente não relacionado
+    # ("minha senha do wifi" pra uma pergunta sobre residência) mede
+    # distância de cosseno parecida com conteúdo de verdade relacionado —
+    # tudo ficou medido entre ~0.35 e ~0.42 num teste local (dimensão
+    # 1536), faixa estreita demais pra um corte absoluto separar bem. Em vez de aceitar qualquer
+    # candidato abaixo de max-distance, só considera "empatado" com o
+    # melhor resultado (e por isso parte de um conflito de verdade) quem
+    # fica a até semantic-margin de distância dele — o resto é descartado
+    # mesmo estando dentro do max-distance.
+    semantic-margin: ${APP_EMBEDDINGS_SEMANTIC_MARGIN:0.02}
+  gemini:
+    # Pedido explícito do usuário em 15/10 — só reformula a frase de uma
+    # resposta já encontrada (nunca decide o que é fato, nunca vê conteúdo
+    # SENSITIVE); sempre com fallback silencioso pro texto literal se
+    # desabilitado, sem key ou se a chamada falhar (mesmo princípio de
+    # RF-10 dos embeddings: nunca travar a resposta por causa disso).
+    enabled: ${APP_GEMINI_ENABLED:false}
+    api-key: ${GEMINI_API_KEY:}
+    model: ${APP_GEMINI_MODEL:gemini-flash-latest}
 
 logging:
   level:

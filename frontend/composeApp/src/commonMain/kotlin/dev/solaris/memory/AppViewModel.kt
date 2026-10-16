@@ -74,6 +74,10 @@ class AppViewModel(private val settings: AppSettings) {
         private set
     var palette by mutableStateOf(Palette.entries.first { it.id == settings.paletteId })
         private set
+    var requireBiometricOnOpen by mutableStateOf(settings.requireBiometricOnOpen)
+        private set
+    var blockScreenshots by mutableStateOf(settings.blockScreenshots)
+        private set
     var serverUrl by mutableStateOf(settings.serverUrl)
     var isLoggedIn by mutableStateOf(false)
     var loginError by mutableStateOf<String?>(null)
@@ -82,6 +86,20 @@ class AppViewModel(private val settings: AppSettings) {
     var chatHistory by mutableStateOf<List<ChatEntry>>(emptyList())
     var memories by mutableStateOf<List<MemoryResponse>>(emptyList())
     var statusMessage by mutableStateOf<String?>(null)
+    /**
+     * Achado do audit de UI 15/10: o indicador "VPN · OK" no cabeçalho
+     * estava sempre fixo em `true`. Aqui vira um sinal real, derivado da
+     * última chamada de rede: `ApiException` significa que o servidor
+     * respondeu (então a VPN está de pé, só que com erro de outra
+     * natureza); qualquer outra exceção (timeout, conexão recusada,
+     * DNS/host inalcançável) significa que a chamada nem chegou lá.
+     */
+    var isConnected by mutableStateOf(true)
+        private set
+
+    private fun registrarResultadoDeRede(e: Exception) {
+        isConnected = e is dev.solaris.memory.network.ApiException
+    }
 
     val api = ApiClient(serverUrl)
 
@@ -93,6 +111,16 @@ class AppViewModel(private val settings: AppSettings) {
     fun updatePalette(value: Palette) {
         palette = value
         settings.paletteId = value.id
+    }
+
+    fun updateRequireBiometricOnOpen(value: Boolean) {
+        requireBiometricOnOpen = value
+        settings.requireBiometricOnOpen = value
+    }
+
+    fun updateBlockScreenshots(value: Boolean) {
+        blockScreenshots = value
+        settings.blockScreenshots = value
     }
 
     fun applyServerUrl() {
@@ -109,10 +137,12 @@ class AppViewModel(private val settings: AppSettings) {
             api.restoreToken(savedToken)
             memories = api.listMemories(status = "all").items
             isLoggedIn = true
+            isConnected = true
         } catch (e: Exception) {
             // A saved token that no longer works (expired, revoked, server
             // changed) should fall back to login, not sit on a broken session.
             settings.token = null
+            registrarResultadoDeRede(e)
         } finally {
             isRestoringSession = false
         }
@@ -126,9 +156,11 @@ class AppViewModel(private val settings: AppSettings) {
             settings.token = api.currentToken()
             settings.username = username
             isLoggedIn = true
+            isConnected = true
             refreshMemories()
         } catch (e: Exception) {
             loginError = e.message ?: "Falha ao autenticar"
+            registrarResultadoDeRede(e)
         }
     }
 
@@ -159,21 +191,44 @@ class AppViewModel(private val settings: AppSettings) {
         memories = emptyList()
     }
 
+    /**
+     * "Limpar cache" (Ajustes) — o único estado local que se acumula e não
+     * vem do servidor é o histórico de conversa (nunca persistido entre
+     * sessões, mas cresce indefinidamente dentro de uma sessão). Não afeta
+     * nenhuma memória salva no servidor.
+     */
+    fun clearCache() {
+        chatHistory = emptyList()
+    }
+
     suspend fun refreshMemories() {
         try {
             val page = api.listMemories(status = "all")
             memories = page.items
+            isConnected = true
         } catch (e: Exception) {
-            statusMessage = e.message
+            statusMessage = e.message ?: "Falha ao atualizar a lista de memórias."
+            registrarResultadoDeRede(e)
         }
     }
 
-    suspend fun deleteMemory(id: String) {
-        try {
+    /**
+     * Devolve se a exclusão de fato aconteceu — o chamador (tela de
+     * Detalhe) só deve navegar de volta pra lista quando for `true`.
+     * Antes disso a tela voltava pra lista imediatamente e disparava a
+     * exclusão em paralelo sem esperar o resultado, então uma falha real
+     * (rede, servidor fora) passava batido, igual a um sucesso.
+     */
+    suspend fun deleteMemory(id: String): Boolean {
+        return try {
             api.deleteMemory(id)
+            isConnected = true
             refreshMemories()
+            true
         } catch (e: Exception) {
-            statusMessage = e.message
+            statusMessage = e.message ?: "Falha ao excluir — tente de novo."
+            registrarResultadoDeRede(e)
+            false
         }
     }
 
@@ -301,8 +356,10 @@ class AppViewModel(private val settings: AppSettings) {
                     }
                 }
             }
+            isConnected = true
         } catch (e: Exception) {
             chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Erro: ${e.message ?: "falha de comunicação com o servidor"}", agora())
+            registrarResultadoDeRede(e)
         }
     }
 }

@@ -9,20 +9,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
 
 /**
  * HANDOFF.md v1.1 section 3 "Cabeçalho principal" — usado só em Conversa e
- * Memórias. Grade de 3 colunas: status da VPN à esquerda, `Solaris`
- * centralizado, engrenagem à direita. O símbolo "não aparece no
- * cabeçalho" (seção 1) — quem separa do conteúdo são as abas (SectionTabs),
- * por isso não há filete inferior aqui.
+ * Memórias. Grade de 3 colunas: status da VPN à esquerda, símbolo animado
+ * no lugar do título (substituindo o texto `Solaris`), engrenagem à
+ * direita. Quem separa do conteúdo são as abas (SectionTabs), por isso não
+ * há filete inferior aqui.
  */
 @Composable
 fun AppHeader(onAjustes: () -> Unit, vpnOk: Boolean = true, modifier: Modifier = Modifier) {
@@ -36,10 +34,10 @@ fun AppHeader(onAjustes: () -> Unit, vpnOk: Boolean = true, modifier: Modifier =
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f)) { VpnStatus(vpnOk) }
-        Text(
-            "Solaris",
-            style = solarisText.tituloTela.copy(fontWeight = FontWeight.Normal, fontSize = 17.sp, letterSpacing = 3.sp),
-            color = colors.textoSuave,
+        SolarisLogoSprite(
+            modifier = Modifier.size(width = 44.dp, height = 33.dp),
+            corPlaneta = colors.usuario,
+            corTraco = colors.textoSuave,
         )
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             IconSquareButton(SolarisIcon.AJUSTES, "Ajustes", onAjustes)
