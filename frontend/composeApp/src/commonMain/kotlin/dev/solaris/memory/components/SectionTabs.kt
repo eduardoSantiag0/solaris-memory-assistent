@@ -15,15 +15,22 @@ import androidx.compose.ui.unit.sp
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.solarisText
 
-enum class SecaoPrincipal { CONVERSA, MEMORIAS }
+enum class SecaoPrincipal { CONVERSA, MEMORIAS, EVENTOS }
 
 /**
  * HANDOFF.md v1.1 section 3 "Abas" — substitui a navegação inferior (não
- * há mais barra de 3 itens). Só Conversa e Memórias; Ajustes é alcançado
- * pela engrenagem do AppHeader, não é uma aba.
+ * há mais barra de 3 itens). Conversa, Memórias e Eventos (agrupamento
+ * manual de memórias); Ajustes é alcançado pela engrenagem do AppHeader,
+ * não é uma aba.
  */
 @Composable
-fun SectionTabs(selecionada: SecaoPrincipal, contadorMemorias: Int, onSelecionar: (SecaoPrincipal) -> Unit, modifier: Modifier = Modifier) {
+fun SectionTabs(
+    selecionada: SecaoPrincipal,
+    contadorMemorias: Int,
+    contadorEventos: Int = 0,
+    onSelecionar: (SecaoPrincipal) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalSolarisColors.current
     val fileteColor = colors.divisoria
     Row(
@@ -40,6 +47,7 @@ fun SectionTabs(selecionada: SecaoPrincipal, contadorMemorias: Int, onSelecionar
     ) {
         SectionTab("Conversa", null, selecionada == SecaoPrincipal.CONVERSA) { onSelecionar(SecaoPrincipal.CONVERSA) }
         SectionTab("Memórias", contadorMemorias, selecionada == SecaoPrincipal.MEMORIAS) { onSelecionar(SecaoPrincipal.MEMORIAS) }
+        SectionTab("Eventos", contadorEventos, selecionada == SecaoPrincipal.EVENTOS) { onSelecionar(SecaoPrincipal.EVENTOS) }
     }
 }
 

@@ -1,12 +1,15 @@
 package dev.solaris.memory.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,18 +21,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.components.ConfirmDialog
 import dev.solaris.memory.components.DangerButton
 import dev.solaris.memory.components.MaskedValue
+import dev.solaris.memory.components.MonoOutlineChip
 import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SecondaryButton
 import dev.solaris.memory.components.Stamp
 import dev.solaris.memory.components.StampType
+import dev.solaris.memory.components.decodeImageBitmap
+import dev.solaris.memory.components.rememberExternalOpener
+import dev.solaris.memory.network.AttachmentResponse
+import dev.solaris.memory.network.EventResponse
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.theme.LocalSolarisColors
+import dev.solaris.memory.theme.SolarisIcon
+import dev.solaris.memory.theme.SolarisIconGlyph
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -39,13 +50,13 @@ import kotlinx.datetime.toLocalDateTime
 
 /** HANDOFF.md tela 06. "Editar" reaproveita a folha Nova memória em modo edição (RF-09). */
 @Composable
-fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExcluido: () -> Unit) {
+fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExcluido: () -> Unit, onAbrirEvento: (String) -> Unit = {}) {
     var confirmandoExclusao by remember { mutableStateOf(false) }
     var excluindo by remember { mutableStateOf(false) }
     var editando by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    MemoryDetailContent(memory, viewModel, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true })
+    MemoryDetailContent(memory, viewModel, onPedirExclusao = { confirmandoExclusao = true }, onEditar = { editando = true }, onAbrirEvento = onAbrirEvento)
 
     if (confirmandoExclusao) {
         val sensivel = memory.sensitivity == "SENSITIVE"
@@ -81,6 +92,7 @@ fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExclui
 
     if (editando) {
         NovaMemoriaSheet(
+            viewModel = viewModel,
             editando = memory,
             onDismiss = { editando = false },
             onSalvar = { resultado -> viewModel.updateMemoryFromForm(memory.id, resultado) },
@@ -89,7 +101,7 @@ fun MemoryDetailScreen(memory: MemoryResponse, viewModel: AppViewModel, onExclui
 }
 
 @Composable
-private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel, onPedirExclusao: () -> Unit, onEditar: () -> Unit) {
+private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel, onPedirExclusao: () -> Unit, onEditar: () -> Unit, onAbrirEvento: (String) -> Unit) {
     val colors = LocalSolarisColors.current
     val isTemporaria = memory.expiresAt != null
     val isVencida = memory.status == "EXPIRED" || memory.status == "DELETED"
@@ -97,6 +109,29 @@ private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel,
 
     val tracejadoColor = colors.tracejado
     val divisoriaColor = colors.divisoria
+
+    var anexo by remember { mutableStateOf<AttachmentResponse?>(null) }
+    var anexoBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var eventosDaMemoria by remember { mutableStateOf<List<EventResponse>>(emptyList()) }
+    val abrirExternamente = rememberExternalOpener()
+
+    LaunchedEffect(memory.id) {
+        anexo = null
+        anexoBytes = null
+        if (memory.hasAttachment) {
+            try {
+                anexo = viewModel.api.getAttachment(memory.id)
+                anexoBytes = viewModel.api.getAttachmentBytes(memory.id)
+            } catch (e: Exception) {
+                // Sem bloquear a tela por causa do anexo — o conteúdo principal da ficha segue visível.
+            }
+        }
+        eventosDaMemoria = try {
+            viewModel.api.eventsForMemory(memory.id)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     // Pedido do usuário em 15/10: "ainda não consigo editar ou excluir
     // memórias permanentes" — causa real era este Column não rolar: texto
@@ -186,6 +221,48 @@ private fun MemoryDetailContent(memory: MemoryResponse, viewModel: AppViewModel,
             MetaRow("EVENTO", memory.eventAt?.let { formatarDataHora(it) } ?: "Não informado")
             MetaRow("ATUALIZADA", if (memory.updatedAt != memory.createdAt) formatarDataHora(memory.updatedAt) else "—")
             MetaRow("STATUS", if (isVencida) "Vencida" else "Ativa")
+        }
+
+        val anexoAtual = anexo
+        if (anexoAtual != null) {
+            Spacer(Modifier.height(24.dp))
+            Text("ANEXO", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(bottom = 8.dp))
+            val bitmap = remember(anexoBytes) { anexoBytes?.let { decodeImageBitmap(it) } }
+            Column(modifier = Modifier.fillMaxWidth().background(colors.superficie).padding(12.dp)) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = anexoAtual.filename,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp)
+                            .clickable { anexoBytes?.let { abrirExternamente(it, anexoAtual.filename, anexoAtual.contentType) } },
+                    )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SolarisIconGlyph(SolarisIcon.DOCUMENTO, colors.texto)
+                        Text(anexoAtual.filename, style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(start = 10.dp))
+                    }
+                }
+                Text(anexoAtual.description, style = solarisText.corpo, color = colors.texto, modifier = Modifier.padding(top = 10.dp))
+                MonoOutlineChip(
+                    text = "Abrir",
+                    onClick = { anexoBytes?.let { abrirExternamente(it, anexoAtual.filename, anexoAtual.contentType) } },
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
+        }
+
+        if (eventosDaMemoria.isNotEmpty()) {
+            Spacer(Modifier.height(24.dp))
+            Text("PERTENCE A", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(bottom = 8.dp))
+            eventosDaMemoria.forEach { evento ->
+                Text(
+                    evento.title,
+                    style = solarisText.corpo,
+                    color = colors.acao,
+                    modifier = Modifier.padding(bottom = 6.dp).clickable { onAbrirEvento(evento.id) },
+                )
+            }
         }
 
         Spacer(Modifier.height(32.dp))

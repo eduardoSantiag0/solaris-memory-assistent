@@ -35,10 +35,14 @@ remonta a algo que você realmente registrou, nunca a algo inventado.
   temporárias), responde perguntas buscando primeiro por texto exato, e só
   cai pra busca semântica (via um modelo de embeddings local, Ollama)
   quando nada bate exato. Login de usuário único, conteúdo criptografado
-  em repouso.
+  em repouso. Cada memória pode ter um anexo (imagem ou PDF) com descrição,
+  e pode ser agrupada em **eventos** — uma coleção manual e com título de
+  memórias já existentes; o evento em si não tem horário, ele é só a
+  ordenação das suas memórias pelo momento em que cada uma aconteceu.
 - **`frontend/`** — app em Compose Multiplatform (mesmo código roda em
-  Android e Desktop): chat, lista de memórias, e configurações (tema,
-  servidor, login).
+  Android e Desktop): chat (com autocomplete de comandos `/add`,
+  `/add-temp`, `/add-sensitive`, `/event`), lista de memórias, eventos, e
+  configurações (tema, servidor, login).
 - **`deploy/`** — stack em Docker Compose pra colocar tudo numa VM na
   nuvem, acessível só por um túnel WireGuard. Veja
   [`deploy/README.md`](deploy/README.md) pro passo a passo.
@@ -61,6 +65,6 @@ Testes do backend: `cd backend && mvn test`.
 
 ## 🛠️ Ainda não feito
 
-- Fonte pixel-art de verdade e textura de fundo (hoje é uma aproximação).
+- Fonte pixel-art de verdade (hoje é uma aproximação com IBM Plex Sans/Mono).
 - Backup criptografado automático/agendado (`deploy/backup.sh` existe, mas
   ainda não está agendado).

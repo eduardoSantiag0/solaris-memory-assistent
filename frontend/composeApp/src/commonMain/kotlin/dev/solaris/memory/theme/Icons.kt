@@ -34,7 +34,7 @@ private fun DrawScope.fillSvgPath(pathData: String, tint: Color, k: Float) {
 enum class SolarisIcon {
     CHAT, MEMORIAS, AJUSTES, PERMANENTE, TEMPORARIA, SENSIVEL, REVELAR,
     BUSCAR, EDITAR, EXCLUIR, NOVA, ENVIAR, VOLTAR, FECHAR, ALERTA,
-    DOCUMENTO, SETA_DIREITA,
+    DOCUMENTO, SETA_DIREITA, ANEXO,
 }
 
 @Composable
@@ -208,6 +208,26 @@ fun SolarisIconGlyph(icon: SolarisIcon, tint: Color, modifier: Modifier = Modifi
                 moveTo(p(9f, 6f).x, p(9f, 6f).y)
                 lineTo(p(15f, 12f).x, p(15f, 12f).y)
                 lineTo(p(9f, 18f).x, p(9f, 18f).y)
+            }
+
+            // Paperclip (anexo), approximated as two nested open loops — not a
+            // byte-identical glyph (see file header), just a recognizable clip.
+            SolarisIcon.ANEXO -> {
+                path {
+                    moveTo(p(14f, 4f).x, p(14f, 4f).y)
+                    cubicTo(p(17f, 4f).x, p(17f, 4f).y, p(19f, 6f).x, p(19f, 6f).y, p(19f, 9f).x, p(19f, 9f).y)
+                    lineTo(p(19f, 16f).x, p(19f, 16f).y)
+                    cubicTo(p(19f, 19f).x, p(19f, 19f).y, p(16.5f, 21f).x, p(16.5f, 21f).y, p(14f, 21f).x, p(14f, 21f).y)
+                    cubicTo(p(11.5f, 21f).x, p(11.5f, 21f).y, p(9f, 19f).x, p(9f, 19f).y, p(9f, 16f).x, p(9f, 16f).y)
+                    lineTo(p(9f, 9f).x, p(9f, 9f).y)
+                }
+                path {
+                    moveTo(p(12f, 9f).x, p(12f, 9f).y)
+                    lineTo(p(12f, 15f).x, p(12f, 15f).y)
+                    cubicTo(p(12f, 16f).x, p(12f, 16f).y, p(13f, 17f).x, p(13f, 17f).y, p(14f, 17f).x, p(14f, 17f).y)
+                    cubicTo(p(15f, 17f).x, p(15f, 17f).y, p(16f, 16f).x, p(16f, 16f).y, p(16f, 15f).x, p(16f, 15f).y)
+                    lineTo(p(16f, 9f).x, p(16f, 9f).y)
+                }
             }
 
             SolarisIcon.ALERTA -> {

@@ -3,11 +3,16 @@ package dev.solaris.memory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import dev.solaris.memory.components.PickedFile
 import dev.solaris.memory.network.ApiClient
 import dev.solaris.memory.network.ChatQueryResponse
+import dev.solaris.memory.network.CreateEventRequest
 import dev.solaris.memory.network.CreateMemoryRequest
+import dev.solaris.memory.network.EventDetailResponse
+import dev.solaris.memory.network.EventResponse
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.network.SourceRef
+import dev.solaris.memory.network.UpdateEventRequest
 import dev.solaris.memory.network.UpdateMemoryRequest
 import dev.solaris.memory.network.randomRequestId
 import dev.solaris.memory.settings.AppSettings
@@ -51,6 +56,9 @@ data class NovaMemoriaFormResultado(
     val eventAt: String?,
     val removerEventAt: Boolean,
     val sensivel: Boolean,
+    val anexo: PickedFile? = null,
+    val descricaoAnexo: String? = null,
+    val removerAnexo: Boolean = false,
 )
 
 private fun agora(): String {
@@ -85,6 +93,8 @@ class AppViewModel(private val settings: AppSettings) {
 
     var chatHistory by mutableStateOf<List<ChatEntry>>(emptyList())
     var memories by mutableStateOf<List<MemoryResponse>>(emptyList())
+    var events by mutableStateOf<List<EventResponse>>(emptyList())
+    var eventoDetalhe by mutableStateOf<EventDetailResponse?>(null)
     var statusMessage by mutableStateOf<String?>(null)
     /**
      * Achado do audit de UI 15/10: o indicador "VPN · OK" no cabeçalho
@@ -136,6 +146,7 @@ class AppViewModel(private val settings: AppSettings) {
             applyServerUrl()
             api.restoreToken(savedToken)
             memories = api.listMemories(status = "all").items
+            events = api.listEvents()
             isLoggedIn = true
             isConnected = true
         } catch (e: Exception) {
@@ -158,6 +169,7 @@ class AppViewModel(private val settings: AppSettings) {
             isLoggedIn = true
             isConnected = true
             refreshMemories()
+            refreshEvents()
         } catch (e: Exception) {
             loginError = e.message ?: "Falha ao autenticar"
             registrarResultadoDeRede(e)
@@ -189,6 +201,8 @@ class AppViewModel(private val settings: AppSettings) {
         isLoggedIn = false
         chatHistory = emptyList()
         memories = emptyList()
+        events = emptyList()
+        eventoDetalhe = null
     }
 
     /**
@@ -208,6 +222,81 @@ class AppViewModel(private val settings: AppSettings) {
             isConnected = true
         } catch (e: Exception) {
             statusMessage = e.message ?: "Falha ao atualizar a lista de memórias."
+            registrarResultadoDeRede(e)
+        }
+    }
+
+    suspend fun refreshEvents() {
+        try {
+            events = api.listEvents()
+            isConnected = true
+        } catch (e: Exception) {
+            statusMessage = e.message ?: "Falha ao atualizar a lista de eventos."
+            registrarResultadoDeRede(e)
+        }
+    }
+
+    suspend fun loadEventDetail(id: String) {
+        try {
+            eventoDetalhe = api.getEvent(id)
+            isConnected = true
+        } catch (e: Exception) {
+            statusMessage = e.message ?: "Falha ao abrir o evento."
+            registrarResultadoDeRede(e)
+        }
+    }
+
+    suspend fun createEvent(title: String, description: String?): String? {
+        return try {
+            api.createEvent(CreateEventRequest(title, description))
+            refreshEvents()
+            null
+        } catch (e: Exception) {
+            e.message ?: "Falha ao criar o evento — tente de novo."
+        }
+    }
+
+    suspend fun updateEvent(id: String, title: String, description: String?): String? {
+        return try {
+            api.updateEvent(id, UpdateEventRequest(title = title, description = description, clearDescription = description == null))
+            refreshEvents()
+            loadEventDetail(id)
+            null
+        } catch (e: Exception) {
+            e.message ?: "Falha ao salvar o evento — tente de novo."
+        }
+    }
+
+    suspend fun deleteEvent(id: String): Boolean {
+        return try {
+            api.deleteEvent(id)
+            refreshEvents()
+            true
+        } catch (e: Exception) {
+            statusMessage = e.message ?: "Falha ao excluir o evento — tente de novo."
+            registrarResultadoDeRede(e)
+            false
+        }
+    }
+
+    suspend fun addMemoryToEvent(eventId: String, memoryId: String) {
+        try {
+            api.addMemoryToEvent(eventId, memoryId)
+            loadEventDetail(eventId)
+            refreshEvents()
+        } catch (e: Exception) {
+            statusMessage = e.message ?: "Falha ao adicionar a memória ao evento."
+            registrarResultadoDeRede(e)
+        }
+    }
+
+    suspend fun removeMemoryFromEvent(eventId: String, memoryId: String) {
+        try {
+            api.removeMemoryFromEvent(eventId, memoryId)
+            loadEventDetail(eventId)
+            refreshEvents()
+        } catch (e: Exception) {
+            statusMessage = e.message ?: "Falha ao remover a memória do evento."
             registrarResultadoDeRede(e)
         }
     }
@@ -240,16 +329,33 @@ class AppViewModel(private val settings: AppSettings) {
      * of closing early (RF-10, RNF-06: never claim success before the
      * server confirms it).
      */
-    suspend fun createMemoryFromForm(content: String, ttlDays: Int?, eventAt: String?, sensitive: Boolean): String? {
+    suspend fun createMemoryFromForm(resultado: NovaMemoriaFormResultado): String? {
+        val ttlDays = resultado.ttlDays
+        val sensitive = resultado.sensivel
         return try {
-            val created = api.createMemory(
-                CreateMemoryRequest(
-                    content = content,
+            val anexo = resultado.anexo
+            val created = if (anexo != null) {
+                api.createMemoryWithAttachment(
+                    content = resultado.conteudo,
                     ttlDays = ttlDays,
-                    eventAt = eventAt,
+                    eventAt = resultado.eventAt,
                     sensitivity = if (sensitive) "SENSITIVE" else null,
-                ),
-            )
+                    clientRequestId = null,
+                    attachmentDescription = resultado.descricaoAnexo.orEmpty(),
+                    fileBytes = anexo.bytes,
+                    filename = anexo.name,
+                    mimeType = anexo.mimeType,
+                )
+            } else {
+                api.createMemory(
+                    CreateMemoryRequest(
+                        content = resultado.conteudo,
+                        ttlDays = ttlDays,
+                        eventAt = resultado.eventAt,
+                        sensitivity = if (sensitive) "SENSITIVE" else null,
+                    ),
+                )
+            }
             refreshMemories()
             // Textos exatos de HANDOFF.md 5.5 (Correções 14/10 item 6).
             val confirmacao = when {
@@ -279,6 +385,12 @@ class AppViewModel(private val settings: AppSettings) {
                     sensitivity = if (resultado.sensivel) "SENSITIVE" else "NORMAL",
                 ),
             )
+            val anexo = resultado.anexo
+            if (anexo != null) {
+                api.replaceAttachment(id, resultado.descricaoAnexo.orEmpty(), anexo.bytes, anexo.name, anexo.mimeType)
+            } else if (resultado.removerAnexo) {
+                api.deleteAttachment(id)
+            }
             refreshMemories()
             null
         } catch (e: Exception) {
@@ -341,6 +453,30 @@ class AppViewModel(private val settings: AppSettings) {
                     api.createMemory(CreateMemoryRequest(content = text))
                     refreshMemories()
                     chatHistory = chatHistory + ChatEntry(ChatRole.ASSISTANT, "Salva como permanente.", agora(), salva = true)
+                }
+                input.startsWith("/event") -> {
+                    val rest = input.removePrefix("/event").trim()
+                    val partes = rest.split("|", limit = 2).map { it.trim() }
+                    val tituloEvento = partes.getOrNull(0).orEmpty()
+                    val texto = partes.getOrNull(1).orEmpty()
+                    if (tituloEvento.isEmpty() || texto.isEmpty()) {
+                        chatHistory = chatHistory + ChatEntry(
+                            ChatRole.ASSISTANT,
+                            "Uso: /event <evento> | <texto>. Exemplo: /event Viagem para o Chile | Compramos as passagens hoje.",
+                            agora(),
+                        )
+                        return
+                    }
+                    refreshEvents()
+                    val evento = events.firstOrNull { it.title.equals(tituloEvento, ignoreCase = true) }
+                        ?: api.createEvent(CreateEventRequest(title = tituloEvento))
+                    val created = api.createMemory(CreateMemoryRequest(content = texto))
+                    api.addMemoryToEvent(evento.id, created.id)
+                    refreshMemories()
+                    refreshEvents()
+                    chatHistory = chatHistory + ChatEntry(
+                        ChatRole.ASSISTANT, "Salva como permanente e associada ao evento \"${evento.title}\".", agora(), salva = true,
+                    )
                 }
                 else -> {
                     val response: ChatQueryResponse = api.chatQuery(input, randomRequestId())

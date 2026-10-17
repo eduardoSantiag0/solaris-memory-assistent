@@ -21,6 +21,11 @@ import dev.solaris.memory.theme.solarisText
  * no lugar do título (substituindo o texto `Solaris`), engrenagem à
  * direita. Quem separa do conteúdo são as abas (SectionTabs), por isso não
  * há filete inferior aqui.
+ *
+ * Mudança de design 16/10/2026 (design/solaris-logo-cabecalho/INSTRUCOES.md):
+ * [SolarisLogoSprite] (reflexo em Canvas, duas cores) deu lugar a
+ * [SolarisHeaderMark] (pixel art de 32×24, uma só cor, estrelas piscando) —
+ * ver o arquivo pra decisão e referência visual.
  */
 @Composable
 fun AppHeader(onAjustes: () -> Unit, vpnOk: Boolean = true, modifier: Modifier = Modifier) {
@@ -34,11 +39,7 @@ fun AppHeader(onAjustes: () -> Unit, vpnOk: Boolean = true, modifier: Modifier =
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f)) { VpnStatus(vpnOk) }
-        SolarisLogoSprite(
-            modifier = Modifier.size(width = 44.dp, height = 33.dp),
-            corPlaneta = colors.usuario,
-            corTraco = colors.textoSuave,
-        )
+        SolarisHeaderMark()
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             IconSquareButton(SolarisIcon.AJUSTES, "Ajustes", onAjustes)
         }

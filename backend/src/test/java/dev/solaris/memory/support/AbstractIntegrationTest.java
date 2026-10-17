@@ -63,7 +63,10 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void resetTestState() {
         mutableClock.setInstant(BASELINE_INSTANT);
+        // attachments/event_memories cascade off memories; events has no FK to
+        // memories, so it needs its own cleanup.
         jdbcTemplate.update("DELETE FROM memories");
+        jdbcTemplate.update("DELETE FROM events");
         authService.revokeAllSessions();
     }
 

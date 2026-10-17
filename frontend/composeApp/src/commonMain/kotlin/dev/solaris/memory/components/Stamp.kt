@@ -15,7 +15,7 @@ import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.SolarisIconGlyph
 import dev.solaris.memory.theme.solarisText
 
-enum class StampType { PERMANENTE, TEMPORARIA, SENSIVEL, VENCIDA }
+enum class StampType { PERMANENTE, TEMPORARIA, SENSIVEL, VENCIDA, ANEXO }
 
 /**
  * HANDOFF.md: "Sempre ícone + texto, nunca só cor" (acessibilidade, seção
@@ -30,6 +30,7 @@ fun Stamp(type: StampType, detail: String? = null, modifier: Modifier = Modifier
         StampType.TEMPORARIA -> Quadruple(SolarisIcon.TEMPORARIA, "TEMPORÁRIA", colors.acao, colors.seloTemporaria)
         StampType.SENSIVEL -> Quadruple(SolarisIcon.SENSIVEL, "SENSÍVEL", colors.acao, colors.seloTemporaria)
         StampType.VENCIDA -> Quadruple(null, "VENCIDA", colors.tracejado, null)
+        StampType.ANEXO -> Quadruple(SolarisIcon.ANEXO, "ANEXO", colors.texto, colors.seloPermanente)
     }
     val text = if (detail != null) "$label · $detail" else label
     val fundoModifier = if (background != null) Modifier.background(background) else Modifier.dashedBorder(colors.tracejado)

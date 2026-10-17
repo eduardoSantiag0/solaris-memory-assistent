@@ -1,5 +1,6 @@
 package dev.solaris.memory.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,13 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.NovaMemoriaFormResultado
+import dev.solaris.memory.network.AttachmentResponse
 import dev.solaris.memory.network.MemoryResponse
 import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
+import dev.solaris.memory.theme.SolarisIconGlyph
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -53,6 +59,7 @@ private enum class TipoMemoria { PERMANENTE, TEMPORARIA }
  */
 @Composable
 fun NovaMemoriaSheet(
+    viewModel: AppViewModel,
     editando: MemoryResponse? = null,
     onDismiss: () -> Unit,
     onSalvar: suspend (NovaMemoriaFormResultado) -> String?,
@@ -79,6 +86,32 @@ fun NovaMemoriaSheet(
     var erro by remember { mutableStateOf<String?>(null) }
     var dataEvento by remember { mutableStateOf(editando?.eventAt?.let { parseEventoLocal(it) }) }
     var mostrarSeletorData by remember { mutableStateOf(false) }
+
+    // Anexo (RF: "imagens ou PDFs e um texto descrevendo ela") — o clipe
+    // mora no mesmo formulário do /add, memória e anexo são criados juntos.
+    var anexo by remember { mutableStateOf<PickedFile?>(null) }
+    var descricaoAnexo by remember { mutableStateOf("") }
+    var anexoExistente by remember { mutableStateOf<AttachmentResponse?>(null) }
+    var anexoExistenteBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var removerAnexoExistente by remember { mutableStateOf(false) }
+    val abrirSeletorDeArquivo = rememberFilePicker { escolhido ->
+        anexo = escolhido
+        removerAnexoExistente = false
+    }
+
+    LaunchedEffect(editando?.id) {
+        if (editando != null && editando.hasAttachment) {
+            try {
+                anexoExistente = viewModel.api.getAttachment(editando.id)
+                descricaoAnexo = anexoExistente?.description.orEmpty()
+                if (anexoExistente?.contentType?.startsWith("image/") == true) {
+                    anexoExistenteBytes = viewModel.api.getAttachmentBytes(editando.id)
+                }
+            } catch (e: Exception) {
+                // Sem anexo de verdade (apagado em outro lugar) ou falha de rede — segue sem bloquear o formulário.
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -134,7 +167,14 @@ fun NovaMemoriaSheet(
                 HorizontalRule()
             }
 
-            Text("O QUE VOCÊ QUER LEMBRAR?", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("O QUE VOCÊ QUER LEMBRAR?", style = solarisText.meta, color = colors.texto)
+                IconSquareButton(SolarisIcon.ANEXO, "Anexar imagem ou PDF", abrirSeletorDeArquivo)
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,6 +192,31 @@ fun NovaMemoriaSheet(
                     textStyle = solarisText.corpo.copy(color = colors.texto),
                     cursorBrush = SolidColor(colors.texto),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            val mostrarAnexoExistente = anexo == null && anexoExistente != null && !removerAnexoExistente
+            if (anexo != null || mostrarAnexoExistente) {
+                AnexoPreview(
+                    nome = anexo?.name ?: anexoExistente?.filename.orEmpty(),
+                    mimeType = anexo?.mimeType ?: anexoExistente?.contentType.orEmpty(),
+                    bytesImagem = anexo?.bytes ?: anexoExistenteBytes,
+                    onRemover = {
+                        if (anexo != null) {
+                            anexo = null
+                        } else {
+                            removerAnexoExistente = true
+                            anexoExistenteBytes = null
+                        }
+                        descricaoAnexo = ""
+                    },
+                )
+                Text("DESCREVA O ANEXO", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                SolarisTextField(
+                    value = descricaoAnexo,
+                    onValueChange = { descricaoAnexo = it; erro = null },
+                    placeholder = "Ex.: Recibo da consulta médica",
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -196,9 +261,10 @@ fun NovaMemoriaSheet(
                 Text(erro!!, style = solarisText.corpo, color = colors.acao, modifier = Modifier.padding(top = 12.dp))
             }
 
+            val temAnexoPendente = anexo != null || (anexoExistente != null && !removerAnexoExistente)
             PrimaryButton(
                 text = if (salvando) "Salvando..." else if (editando != null) "Salvar alterações" else "Salvar memória",
-                enabled = conteudo.isNotBlank() && !salvando,
+                enabled = conteudo.isNotBlank() && !salvando && (!temAnexoPendente || descricaoAnexo.isNotBlank()),
                 onClick = {
                     scope.launch {
                         salvando = true
@@ -211,6 +277,9 @@ fun NovaMemoriaSheet(
                                 eventAt = eventAt,
                                 removerEventAt = dataEvento == null,
                                 sensivel = sensivel,
+                                anexo = anexo,
+                                descricaoAnexo = if (temAnexoPendente) descricaoAnexo else null,
+                                removerAnexo = removerAnexoExistente && anexo == null,
                             ),
                         )
                         salvando = false
@@ -247,6 +316,40 @@ fun NovaMemoriaSheet(
             onConfirmar = { dataEvento = it; mostrarSeletorData = false },
             onCancelar = { mostrarSeletorData = false },
         )
+    }
+}
+
+/** Thumbnail for an image, generic document icon for a PDF, filename + a "×" to remove the pick. */
+@Composable
+private fun AnexoPreview(nome: String, mimeType: String, bytesImagem: ByteArray?, onRemover: () -> Unit) {
+    val colors = LocalSolarisColors.current
+    val bitmap = remember(bytesImagem) { bytesImagem?.let { decodeImageBitmap(it) } }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .background(colors.superficie)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = nome,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(44.dp).background(colors.preenchimento),
+            )
+        } else {
+            Box(modifier = Modifier.size(44.dp).background(colors.preenchimento), contentAlignment = Alignment.Center) {
+                SolarisIconGlyph(SolarisIcon.DOCUMENTO, colors.texto)
+            }
+        }
+        Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Text(nome, style = solarisText.corpo, color = colors.texto)
+            Text(mimeType, style = solarisText.meta, color = colors.textoSecundario)
+        }
+        IconSquareButton(SolarisIcon.FECHAR, "Remover anexo", onRemover)
     }
 }
 

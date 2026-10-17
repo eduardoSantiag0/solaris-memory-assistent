@@ -25,11 +25,18 @@ import dev.solaris.memory.theme.solarisText
 
 private data class ComandoSugestao(val icon: SolarisIcon, val comando: String, val placeholder: String, val descricao: String)
 
-/** HANDOFF.md tela 03 (Correções 14/10 item 9): exatamente estes três — não existe /add-temp-sensitive no chat, só pela folha Nova memória. */
+/**
+ * HANDOFF.md tela 03 (Correções 14/10 item 9): exatamente estes três /add* —
+ * não existe /add-temp-sensitive no chat, só pela folha Nova memória.
+ * /event foi adicionado depois (agrupamento manual de memórias em eventos):
+ * cria o evento se o título ainda não existir (match por título, sem
+ * diferenciar maiúsculas/minúsculas) e associa a memória nova a ele.
+ */
 private val COMANDOS = listOf(
     ComandoSugestao(SolarisIcon.PERMANENTE, "/add", "<texto>", "Memória permanente"),
     ComandoSugestao(SolarisIcon.TEMPORARIA, "/add-temp", "<dias> <texto>", "Temporária · sai das respostas depois do prazo"),
     ComandoSugestao(SolarisIcon.SENSIVEL, "/add-sensitive", "<texto>", "Permanente e sensível · mascarada nas respostas"),
+    ComandoSugestao(SolarisIcon.DOCUMENTO, "/event", "<evento> | <texto>", "Memória permanente associada a um evento (cria se não existir)"),
 )
 
 /** True while the composer field should show the command autocomplete (HANDOFF.md tela 03, RF-15). */
@@ -42,7 +49,10 @@ fun deveMostrarAutocomplete(input: String): Boolean = input.startsWith("/") && !
 @Composable
 fun ComandoAutocomplete(input: String, onSelecionar: (String) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
-    val opcoes = COMANDOS.filter { it.comando.startsWith(input) }
+    // Correção 16/10: apagar até o "-" de /add-temp ou /add-sensitive e
+    // seguir digitando (ex.: "/addsensitive") não casava com startsWith
+    // puro — compara ignorando hífen pra aceitar os dois jeitos de digitar.
+    val opcoes = COMANDOS.filter { it.comando.replace("-", "").startsWith(input.replace("-", "")) }
     if (opcoes.isEmpty()) return
 
     Column(

@@ -39,6 +39,45 @@ data class MemoryResponse(
     val expiresAt: String?,
     val status: String, // ACTIVE | EXPIRED | DELETED
     val sensitivity: String?,
+    val hasAttachment: Boolean = false,
+)
+
+/** Metadata only — raw bytes come from a separate call (ApiClient.getAttachmentBytes). */
+@Serializable
+data class AttachmentResponse(
+    val id: String,
+    val memoryId: String,
+    val filename: String,
+    val contentType: String,
+    val description: String,
+    val sizeBytes: Long,
+    val createdAt: String,
+)
+
+@Serializable
+data class CreateEventRequest(val title: String, val description: String? = null)
+
+@Serializable
+data class UpdateEventRequest(val title: String? = null, val description: String? = null, val clearDescription: Boolean = false)
+
+@Serializable
+data class EventResponse(
+    val id: String,
+    val title: String,
+    val description: String?,
+    val createdAt: String,
+    val updatedAt: String,
+    val memoryCount: Long,
+)
+
+@Serializable
+data class EventDetailResponse(
+    val id: String,
+    val title: String,
+    val description: String?,
+    val createdAt: String,
+    val updatedAt: String,
+    val memories: List<MemoryResponse>,
 )
 
 @Serializable

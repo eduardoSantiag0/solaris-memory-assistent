@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -28,13 +29,15 @@ public class MemoryService {
 
     private final MemoryRepository repository;
     private final EmbeddingService embeddingService;
+    private final AttachmentService attachmentService;
     private final ExecutorService embeddingExecutor;
     private final Clock clock;
 
     public MemoryService(MemoryRepository repository, EmbeddingService embeddingService,
-                          ExecutorService embeddingExecutor, Clock clock) {
+                          AttachmentService attachmentService, ExecutorService embeddingExecutor, Clock clock) {
         this.repository = repository;
         this.embeddingService = embeddingService;
+        this.attachmentService = attachmentService;
         this.embeddingExecutor = embeddingExecutor;
         this.clock = clock;
     }
@@ -89,6 +92,20 @@ public class MemoryService {
         Memory saved = repository.save(memory);
         scheduleEmbedding(saved.getId(), request.content());
         return new IdempotentResult(saved, true);
+    }
+
+    /**
+     * Nova Memória sheet, paperclip flow: the memory and its one attachment
+     * are written together in a single transaction, so a memory is never
+     * left without the attachment the user picked for it (and vice versa).
+     */
+    @Transactional
+    public IdempotentResult createWithAttachment(CreateMemoryRequest request, MultipartFile file, String attachmentDescription) {
+        IdempotentResult result = create(request);
+        if (result.newlyCreated()) {
+            attachmentService.createFor(result.memory().getId(), file, attachmentDescription);
+        }
+        return result;
     }
 
     /** Returns any non-deleted memory, expired or not — management views need to see and clear expired items too. */

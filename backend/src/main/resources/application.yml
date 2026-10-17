@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: solaris-memory-assistant
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:solaris_memory}
     username: ${DB_USER:solaris}
@@ -29,6 +33,10 @@ app:
     #   python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"
     # and set it via APP_ENCRYPTION_KEY, never commit a real key to the repo.
     key: ${APP_ENCRYPTION_KEY:QKKy470XASV8lRE1o+tMmgCGuoU2s0x1Eb5bX6IysXs=}
+  attachments:
+    # Images/PDFs attached to a memory (RF: anexos) — not field-encrypted,
+    # unlike `content`: this VM is no longer shared with other accounts.
+    max-size-mb: ${APP_ATTACHMENT_MAX_SIZE_MB:10}
   auth:
     username: ${APP_USER:admin}
     # BCrypt hash of the single-user password. This default hashes the

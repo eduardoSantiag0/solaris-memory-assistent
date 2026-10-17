@@ -134,10 +134,9 @@ fun MemoriesScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
 
         if (mostrarNovaMemoria) {
             NovaMemoriaSheet(
+                viewModel = viewModel,
                 onDismiss = { mostrarNovaMemoria = false },
-                onSalvar = { resultado ->
-                    viewModel.createMemoryFromForm(resultado.conteudo, resultado.ttlDays, resultado.eventAt, resultado.sensivel)
-                },
+                onSalvar = { resultado -> viewModel.createMemoryFromForm(resultado) },
             )
         }
     }
@@ -185,6 +184,10 @@ private fun MemoryRow(memory: MemoryResponse, viewModel: AppViewModel, onAbrirDe
                 if (sensivel) {
                     Spacer(Modifier.width(6.dp))
                     Stamp(StampType.SENSIVEL)
+                }
+                if (memory.hasAttachment) {
+                    Spacer(Modifier.width(6.dp))
+                    Stamp(StampType.ANEXO)
                 }
             }
         },

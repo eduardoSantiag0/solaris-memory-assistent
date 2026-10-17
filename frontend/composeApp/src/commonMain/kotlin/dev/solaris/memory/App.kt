@@ -28,6 +28,8 @@ import dev.solaris.memory.components.SectionTabs
 import dev.solaris.memory.components.rememberSensitiveGate
 import dev.solaris.memory.screens.AppearanceScreen
 import dev.solaris.memory.screens.ChatScreen
+import dev.solaris.memory.screens.EventDetailScreen
+import dev.solaris.memory.screens.EventsScreen
 import dev.solaris.memory.screens.MemoriesScreen
 import dev.solaris.memory.screens.MemoryDetailScreen
 import dev.solaris.memory.screens.SettingsScreen
@@ -43,6 +45,7 @@ private sealed class SubScreen {
     object Ajustes : SubScreen()
     object Aparencia : SubScreen()
     data class Detalhe(val memoriaId: String) : SubScreen()
+    data class EventoDetalhe(val eventoId: String) : SubScreen()
 }
 
 /**
@@ -117,11 +120,17 @@ fun App() {
                     onVoltar = { sub = SubScreen.None },
                     onAjustes = { sub = SubScreen.Ajustes },
                 )
+                subAtual is SubScreen.EventoDetalhe -> BackHeader(
+                    titulo = "Evento",
+                    onVoltar = { sub = SubScreen.None },
+                    onAjustes = { sub = SubScreen.Ajustes },
+                )
                 else -> {
                     AppHeader(onAjustes = { sub = SubScreen.Ajustes }, vpnOk = viewModel.isConnected)
                     SectionTabs(
                         selecionada = secao,
                         contadorMemorias = viewModel.memories.size,
+                        contadorEventos = viewModel.events.size,
                         onSelecionar = { secao = it },
                     )
                 }
@@ -179,9 +188,17 @@ fun App() {
                         // sucesso — antes a tela voltava pra lista e disparava a
                         // exclusão em paralelo, sem esperar o resultado (achado 15/10).
                         onExcluido = { sub = SubScreen.None },
+                        onAbrirEvento = { id -> sub = SubScreen.EventoDetalhe(id) },
+                    )
+                    subAtual is SubScreen.EventoDetalhe -> EventDetailScreen(
+                        eventId = subAtual.eventoId,
+                        viewModel = viewModel,
+                        onAbrirMemoria = { id -> sub = SubScreen.Detalhe(id) },
+                        onExcluido = { sub = SubScreen.None },
                     )
                     secao == SecaoPrincipal.CONVERSA -> ChatScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.Detalhe(id) })
                     secao == SecaoPrincipal.MEMORIAS -> MemoriesScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.Detalhe(id) })
+                    secao == SecaoPrincipal.EVENTOS -> EventsScreen(viewModel, onAbrirDetalhe = { id -> sub = SubScreen.EventoDetalhe(id) })
                 }
             }
         }

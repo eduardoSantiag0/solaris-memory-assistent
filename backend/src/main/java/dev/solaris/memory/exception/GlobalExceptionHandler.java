@@ -48,6 +48,16 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
     }
 
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(EventNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(AttachmentNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(AttachmentNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+    }
+
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ApiError> handleAuthFailed(AuthenticationFailedException ex) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), List.of());

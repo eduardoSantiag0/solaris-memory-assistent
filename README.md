@@ -34,9 +34,14 @@ traces back to something you actually wrote down, never something invented.
   temporary), answers questions about them by exact text match first, and
   falls back to semantic search (via a local Ollama embedding model) when
   nothing matches exactly. Single-user login, content encrypted at rest.
+  Memories can carry one attachment (image or PDF) with a description, and
+  can be grouped into **events** — a manual, titled collection of existing
+  memories; an event has no time of its own, it's just its memories ordered
+  by when each of them happened.
 - **`frontend/`** — a Compose Multiplatform app (same code, runs on Android
-  and Desktop): chat, a memories list, and settings (theme, server,
-  login).
+  and Desktop): chat (with an `/add`, `/add-temp`, `/add-sensitive`,
+  `/event` command autocomplete), a memories list, events, and settings
+  (theme, server, login).
 - **`deploy/`** — Docker Compose stack to put it all on a small cloud VM,
   reachable only through a WireGuard VPN tunnel. See
   [`deploy/README.md`](deploy/README.md) for the step-by-step.
@@ -59,6 +64,6 @@ Backend tests: `cd backend && mvn test`.
 
 ## 🛠️ Not done yet
 
-- Real pixel-art font and background dithering (currently approximated).
+- A real pixel-art font (currently approximated with IBM Plex Sans/Mono).
 - Automated/scheduled encrypted backups (`deploy/backup.sh` exists, isn't
   scheduled yet).

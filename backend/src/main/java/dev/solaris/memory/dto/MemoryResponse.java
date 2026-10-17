@@ -15,9 +15,10 @@ public record MemoryResponse(
         Instant eventAt,
         Instant expiresAt,
         EffectiveStatus status,
-        Sensitivity sensitivity
+        Sensitivity sensitivity,
+        boolean hasAttachment
 ) {
-    public static MemoryResponse from(Memory memory, Instant now) {
+    public static MemoryResponse from(Memory memory, Instant now, boolean hasAttachment) {
         return new MemoryResponse(
                 memory.getId(),
                 memory.getContent(),
@@ -26,7 +27,8 @@ public record MemoryResponse(
                 memory.getEventAt(),
                 memory.getExpiresAt(),
                 memory.effectiveStatus(now),
-                memory.getSensitivity()
+                memory.getSensitivity(),
+                hasAttachment
         );
     }
 }
