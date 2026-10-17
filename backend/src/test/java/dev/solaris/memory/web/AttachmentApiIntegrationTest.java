@@ -58,10 +58,27 @@ class AttachmentApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void missingDescriptionIsRejected() {
+    void missingDescriptionIsAccepted() {
+        // Correção 17/10: a descrição deixou de ser obrigatória — só o
+        // conteúdo da memória e o arquivo em si continuam exigidos.
         MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
         parts.add("content", "Memória sem descrição de anexo");
         parts.add("file", fileResource("foto.png", FAKE_IMAGE_BYTES));
+
+        ResponseEntity<MemoryResponse> response = postMultipart(parts, MemoryResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().hasAttachment()).isTrue();
+
+        ResponseEntity<AttachmentResponse> metadata = restTemplate.exchange(
+                "/api/v1/memories/" + response.getBody().id() + "/attachment", HttpMethod.GET, authEntity(restTemplate), AttachmentResponse.class);
+        assertThat(metadata.getBody().description()).isNull();
+    }
+
+    @Test
+    void missingFileIsStillRejected() {
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("content", "Memória sem nenhum arquivo");
+        parts.add("attachmentDescription", "Descrição sem arquivo nenhum");
 
         ResponseEntity<String> response = postMultipart(parts, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

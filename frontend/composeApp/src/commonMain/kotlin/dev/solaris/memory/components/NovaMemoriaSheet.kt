@@ -227,7 +227,9 @@ fun NovaMemoriaSheet(
                         descricaoAnexo = ""
                     },
                 )
-                Text("DESCREVA O ANEXO", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                // Correção 17/10: a descrição deixou de ser obrigatória —
+                // só o conteúdo da memória (o campo abaixo) ainda é.
+                Text("DESCREVA O ANEXO (OPCIONAL)", style = solarisText.meta, color = colors.texto, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
                 SolarisTextField(
                     value = descricaoAnexo,
                     onValueChange = { descricaoAnexo = it; erro = null },
@@ -276,10 +278,12 @@ fun NovaMemoriaSheet(
                 Text(erro!!, style = solarisText.corpo, color = colors.acao, modifier = Modifier.padding(top = 12.dp))
             }
 
+            // Correção 17/10: a descrição do anexo não bloqueia mais o salvar —
+            // só o conteúdo da memória continua obrigatório.
             val temAnexoPendente = anexo != null || (anexoExistente != null && !removerAnexoExistente)
             PrimaryButton(
                 text = if (salvando) "Salvando..." else if (editando != null) "Salvar alterações" else "Salvar memória",
-                enabled = conteudo.isNotBlank() && !salvando && (!temAnexoPendente || descricaoAnexo.isNotBlank()),
+                enabled = conteudo.isNotBlank() && !salvando,
                 onClick = {
                     scope.launch {
                         salvando = true

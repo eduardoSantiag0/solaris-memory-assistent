@@ -42,9 +42,10 @@ public class AttachmentService {
         // delete+save here would still violate uq_attachments_memory_id at
         // flush time.
         Instant now = Instant.now(clock);
+        String normalizedDescription = normalizeDescription(description);
         Attachment attachment = repository.findByMemoryId(memoryId).orElse(null);
         if (attachment != null) {
-            attachment.replace(originalFilenameOf(file), file.getContentType(), description.trim(), readBytes(file), now);
+            attachment.replace(originalFilenameOf(file), file.getContentType(), normalizedDescription, readBytes(file), now);
             return attachment;
         }
         Attachment created = new Attachment(
@@ -52,7 +53,7 @@ public class AttachmentService {
                 memoryId,
                 originalFilenameOf(file),
                 file.getContentType(),
-                description.trim(),
+                normalizedDescription,
                 readBytes(file),
                 now
         );
@@ -68,14 +69,17 @@ public class AttachmentService {
         repository.deleteByMemoryId(memoryId);
     }
 
+    private static String normalizeDescription(String description) {
+        if (description == null || description.isBlank()) {
+            return null;
+        }
+        return description.trim();
+    }
+
     private void validate(MultipartFile file, String description) {
         if (file == null || file.isEmpty()) {
             throw new InvalidCommandException(
                     "O anexo precisa de um arquivo. Exemplo: envie a imagem/PDF no campo \"file\".");
-        }
-        if (description == null || description.isBlank()) {
-            throw new InvalidCommandException(
-                    "O anexo precisa de uma descrição. Exemplo: {\"attachmentDescription\": \"Recibo da consulta\"}");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {

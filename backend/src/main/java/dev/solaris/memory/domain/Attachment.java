@@ -31,7 +31,8 @@ public class Attachment {
     @Column(name = "content_type", nullable = false, length = 100)
     private String contentType;
 
-    @Column(nullable = false, columnDefinition = "text")
+    /** Optional (RF revisto 17/10) — the memory's own content is still the one mandatory field. */
+    @Column(columnDefinition = "text")
     private String description;
 
     // No @Lob here on purpose — with Postgres, @Lob on byte[] maps to the
