@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -96,6 +98,10 @@ fun NovaMemoriaSheet(
     var removerAnexoExistente by remember { mutableStateOf(false) }
     val abrirSeletorDeArquivo = rememberFilePicker { escolhido ->
         anexo = escolhido
+        removerAnexoExistente = false
+    }
+    val abrirCamera = rememberCameraCapture { capturado ->
+        anexo = capturado
         removerAnexoExistente = false
     }
 
@@ -173,7 +179,15 @@ fun NovaMemoriaSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("O QUE VOCÊ QUER LEMBRAR?", style = solarisText.meta, color = colors.texto)
-                IconSquareButton(SolarisIcon.ANEXO, "Anexar imagem ou PDF", abrirSeletorDeArquivo)
+                Row {
+                    // Atalho pra foto direto da câmera, sem o passeio "sair do app,
+                    // tirar a foto, voltar e escolher na galeria" (achado da
+                    // pesquisa de UI 16/10) — só aparece onde o aparelho suporta.
+                    if (suportaCameraDireta()) {
+                        IconSquareButton(SolarisIcon.CAMERA, "Tirar foto", abrirCamera)
+                    }
+                    IconSquareButton(SolarisIcon.ANEXO, "Anexar imagem ou PDF", abrirSeletorDeArquivo)
+                }
             }
             Box(
                 modifier = Modifier
@@ -201,6 +215,7 @@ fun NovaMemoriaSheet(
                 AnexoPreview(
                     nome = anexo?.name ?: anexoExistente?.filename.orEmpty(),
                     mimeType = anexo?.mimeType ?: anexoExistente?.contentType.orEmpty(),
+                    tamanhoBytes = anexo?.bytes?.size?.toLong() ?: anexoExistente?.sizeBytes,
                     bytesImagem = anexo?.bytes ?: anexoExistenteBytes,
                     onRemover = {
                         if (anexo != null) {
@@ -319,11 +334,12 @@ fun NovaMemoriaSheet(
     }
 }
 
-/** Thumbnail for an image, generic document icon for a PDF, filename + a "×" to remove the pick. */
+/** Thumbnail for an image, generic document icon for a PDF, filename + tamanho + a "×" to remove the pick. */
 @Composable
-private fun AnexoPreview(nome: String, mimeType: String, bytesImagem: ByteArray?, onRemover: () -> Unit) {
+private fun AnexoPreview(nome: String, mimeType: String, tamanhoBytes: Long?, bytesImagem: ByteArray?, onRemover: () -> Unit) {
     val colors = LocalSolarisColors.current
     val bitmap = remember(bytesImagem) { bytesImagem?.let { decodeImageBitmap(it) } }
+    val ehPdf = mimeType == "application/pdf"
 
     Row(
         modifier = Modifier
@@ -336,21 +352,40 @@ private fun AnexoPreview(nome: String, mimeType: String, bytesImagem: ByteArray?
         if (bitmap != null) {
             Image(
                 bitmap = bitmap,
-                contentDescription = nome,
+                // Achado da pesquisa de UI 16/10: o nome do arquivo não descreve o
+                // conteúdo da imagem pra quem usa leitor de tela — sem como gerar
+                // essa descrição automaticamente aqui, ao menos não repete o nome.
+                contentDescription = "Prévia da imagem anexada",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(44.dp).background(colors.preenchimento),
             )
         } else {
-            Box(modifier = Modifier.size(44.dp).background(colors.preenchimento), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.size(44.dp).background(colors.preenchimento).semantics {
+                    contentDescription = if (ehPdf) "Anexo em PDF" else "Anexo"
+                },
+                contentAlignment = Alignment.Center,
+            ) {
                 SolarisIconGlyph(SolarisIcon.DOCUMENTO, colors.texto)
             }
         }
         Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(nome, style = solarisText.corpo, color = colors.texto)
-            Text(mimeType, style = solarisText.meta, color = colors.textoSecundario)
+            Text(
+                listOfNotNull(mimeType, tamanhoBytes?.let(::formatarTamanhoArquivo)).joinToString(" · "),
+                style = solarisText.meta,
+                color = colors.textoSecundario,
+            )
         }
         IconSquareButton(SolarisIcon.FECHAR, "Remover anexo", onRemover)
     }
+}
+
+/** "1,2 MB" / "840 KB" — acompanha o nome do anexo pra confirmar que é o arquivo certo antes de salvar (achado da pesquisa de UI 16/10). */
+private fun formatarTamanhoArquivo(bytes: Long): String = when {
+    bytes >= 1024 * 1024 -> "${(bytes / (1024f * 1024f) * 10).toInt() / 10f} MB"
+    bytes >= 1024 -> "${bytes / 1024} KB"
+    else -> "$bytes B"
 }
 
 private fun formatarDataEvento(dataHora: LocalDateTime): String {

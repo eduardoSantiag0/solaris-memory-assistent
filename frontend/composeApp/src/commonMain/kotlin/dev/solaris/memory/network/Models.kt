@@ -68,6 +68,8 @@ data class EventResponse(
     val createdAt: String,
     val updatedAt: String,
     val memoryCount: Long,
+    val firstOccurredAt: String? = null,
+    val lastOccurredAt: String? = null,
 )
 
 @Serializable

@@ -14,6 +14,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.AppViewModel
@@ -27,6 +32,7 @@ import dev.solaris.memory.components.NovaMemoriaSheet
 import dev.solaris.memory.components.SavedMessage
 import dev.solaris.memory.components.SourceLink
 import dev.solaris.memory.components.UserMessage
+import dev.solaris.memory.components.comandosFiltrados
 import dev.solaris.memory.components.deveMostrarAutocomplete
 import dev.solaris.memory.components.ditherConversa
 import dev.solaris.memory.network.SourceRef
@@ -45,6 +51,12 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
     val colors = LocalSolarisColors.current
     var input by remember { mutableStateOf("") }
     var mostrarNovaMemoria by remember { mutableStateOf(false) }
+    // Navegação por teclado no autocomplete (setas/Tab/Enter) — alvo é o
+    // Desktop, onde selecionar só por clique é uma lacuna real (achado da
+    // pesquisa de UI 16/10); reseta sempre que o texto muda.
+    var indiceAutocomplete by remember { mutableStateOf(0) }
+    val opcoesAutocomplete = if (deveMostrarAutocomplete(input)) comandosFiltrados(input) else emptyList()
+    LaunchedEffect(input) { indiceAutocomplete = 0 }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -58,7 +70,11 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colors.fundo),
+                .background(colors.fundo)
+                // Garante que o composer e o autocomplete de comandos fiquem
+                // sempre acima do teclado, mesmo se o device/OEM não redimensionar
+                // a janela automaticamente (achado da pesquisa de UI 16/10).
+                .imePadding(),
         ) {
             // A textura precisa cobrir a área rolável inteira, até as bordas
             // da tela — por isso o padding de 20/16dp vira contentPadding da
@@ -121,9 +137,10 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
             }
             }
 
-            if (deveMostrarAutocomplete(input)) {
+            if (opcoesAutocomplete.isNotEmpty()) {
                 ComandoAutocomplete(
                     input = input,
+                    indiceSelecionado = indiceAutocomplete,
                     onSelecionar = { input = it },
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
                 )
@@ -138,7 +155,26 @@ fun ChatScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                     input = ""
                     scope.launch { viewModel.sendChatInput(toSend) }
                 },
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
+                modifier = Modifier
+                    .onPreviewKeyEvent { evento ->
+                        if (opcoesAutocomplete.isEmpty() || evento.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        when (evento.key) {
+                            Key.DirectionDown -> {
+                                indiceAutocomplete = (indiceAutocomplete + 1) % opcoesAutocomplete.size
+                                true
+                            }
+                            Key.DirectionUp -> {
+                                indiceAutocomplete = (indiceAutocomplete - 1 + opcoesAutocomplete.size) % opcoesAutocomplete.size
+                                true
+                            }
+                            Key.Tab, Key.Enter, Key.NumPadEnter -> {
+                                input = "${opcoesAutocomplete[indiceAutocomplete.coerceIn(0, opcoesAutocomplete.size - 1)]} "
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
             )
         }
 

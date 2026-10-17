@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -42,22 +45,32 @@ private val COMANDOS = listOf(
 /** True while the composer field should show the command autocomplete (HANDOFF.md tela 03, RF-15). */
 fun deveMostrarAutocomplete(input: String): Boolean = input.startsWith("/") && !input.contains(' ')
 
+// Correção 16/10: apagar até o "-" de /add-temp ou /add-sensitive e seguir
+// digitando (ex.: "/addsensitive") não casava com startsWith puro — compara
+// ignorando hífen pra aceitar os dois jeitos de digitar.
+private fun ComandoSugestao.casaCom(input: String) = comando.replace("-", "").startsWith(input.replace("-", ""))
+
+/** Comandos (só o texto, ex. "/add-temp") que casam com `input` agora, na mesma ordem exibida — usado pelo ChatScreen pra navegar com teclado (setas/Tab/Enter) sem duplicar a lógica de filtro. */
+fun comandosFiltrados(input: String): List<String> = COMANDOS.filter { it.casaCom(input) }.map { it.comando }
+
 /**
  * HANDOFF.md tela 03. Painel fixo acima do Composer, não um popup flutuante
  * — mesma lógica de "o conteúdo empurra" já usada pelo resto do chat.
  */
 @Composable
-fun ComandoAutocomplete(input: String, onSelecionar: (String) -> Unit, modifier: Modifier = Modifier) {
+fun ComandoAutocomplete(input: String, indiceSelecionado: Int = 0, onSelecionar: (String) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalSolarisColors.current
-    // Correção 16/10: apagar até o "-" de /add-temp ou /add-sensitive e
-    // seguir digitando (ex.: "/addsensitive") não casava com startsWith
-    // puro — compara ignorando hífen pra aceitar os dois jeitos de digitar.
-    val opcoes = COMANDOS.filter { it.comando.replace("-", "").startsWith(input.replace("-", "")) }
+    val opcoes = COMANDOS.filter { it.casaCom(input) }
     if (opcoes.isEmpty()) return
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // Teto de altura + rolagem interna — nunca deixa o painel ficar maior
+            // que a tela disponível (ex.: teclado aberto numa tela baixa) e
+            // escondido atrás do teclado ou cortado embaixo (achado 16/10).
+            .heightIn(max = 280.dp)
+            .verticalScroll(rememberScrollState())
             .background(colors.superficie)
             .drawBehind {
                 drawLine(colors.texto, Offset(0f, 1.dp.toPx() / 2), Offset(size.width, 1.dp.toPx() / 2), strokeWidth = 2.dp.toPx())
@@ -65,14 +78,21 @@ fun ComandoAutocomplete(input: String, onSelecionar: (String) -> Unit, modifier:
             .semantics { role = Role.DropdownList },
     ) {
         opcoes.forEachIndexed { index, opcao ->
-            val destacada = index == 0
+            val destacada = index == indiceSelecionado.coerceIn(0, opcoes.size - 1)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(if (destacada) colors.usuario else colors.superficie)
                     .let { if (index < opcoes.size - 1) it.border(width = 0.dp, color = colors.filete) else it }
                     .clickable { onSelecionar("${opcao.comando} ") }
-                    .semantics { selected = destacada }
+                    // mergeDescendants: sem isso o TalkBack lia cada Text da linha
+                    // (comando, placeholder, descrição) como 3 paradas separadas —
+                    // precisa testar com leitor de tela real no device, isto só
+                    // garante que o nó de acessibilidade é um só (achado 16/10).
+                    .semantics(mergeDescendants = true) {
+                        selected = destacada
+                        contentDescription = "${opcao.comando} ${opcao.placeholder}. ${opcao.descricao}"
+                    }
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {

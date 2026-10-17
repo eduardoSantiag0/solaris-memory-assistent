@@ -75,8 +75,23 @@ public class EventService {
 
     public List<EventResponse> list() {
         return eventRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(event -> EventResponse.from(event, eventMemoryRepository.countByEventId(event.getId())))
+                .map(this::toResponse)
                 .toList();
+    }
+
+    /** Count + the earliest/latest occurredAt among its (non-deleted) memories — the event's own time range, even though the event itself has none. */
+    public EventResponse toResponse(Event event) {
+        List<UUID> memoryIds = eventMemoryRepository.findByEventId(event.getId()).stream()
+                .map(EventMemory::getMemoryId)
+                .toList();
+        List<Instant> occurredAts = memoryRepository.findAllById(memoryIds).stream()
+                .filter(m -> m.getStatus() != dev.solaris.memory.domain.MemoryStatus.DELETED)
+                .map(EventService::occurredAt)
+                .sorted()
+                .toList();
+        Instant first = occurredAts.isEmpty() ? null : occurredAts.get(0);
+        Instant last = occurredAts.isEmpty() ? null : occurredAts.get(occurredAts.size() - 1);
+        return EventResponse.from(event, eventMemoryRepository.countByEventId(event.getId()), first, last);
     }
 
     public EventDetailResponse getDetail(UUID id) {
@@ -125,7 +140,7 @@ public class EventService {
                 .distinct()
                 .map(this::getVisible)
                 .sorted(Comparator.comparing(Event::getCreatedAt).reversed())
-                .map(event -> EventResponse.from(event, eventMemoryRepository.countByEventId(event.getId())))
+                .map(this::toResponse)
                 .toList();
     }
 

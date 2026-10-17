@@ -26,6 +26,9 @@ import dev.solaris.memory.theme.LocalSolarisColors
 import dev.solaris.memory.theme.SolarisIcon
 import dev.solaris.memory.theme.solarisText
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /** Lista de eventos — agrupamentos manuais de memórias, ordenados pelos mais recentes. */
 @Composable
@@ -102,11 +105,30 @@ private fun EventRow(evento: EventResponse, onClick: () -> Unit) {
         evento.description?.let {
             Text(it, style = solarisText.corpo, color = colors.textoSecundario, modifier = Modifier.padding(top = 4.dp))
         }
-        Text(
-            "${evento.memoryCount} memória${if (evento.memoryCount == 1L) "" else "s"}",
-            style = solarisText.meta,
-            color = colors.textoSuave,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "${evento.memoryCount} memória${if (evento.memoryCount == 1L) "" else "s"}",
+                style = solarisText.meta,
+                color = colors.textoSuave,
+            )
+            formatarIntervaloEvento(evento.firstOccurredAt, evento.lastOccurredAt)?.let {
+                Text(it, style = solarisText.meta, color = colors.textoSuave, modifier = Modifier.padding(start = 10.dp))
+            }
+        }
     }
+}
+
+/** Período coberto pelas memórias do evento — o evento não tem horário próprio, só o intervalo das suas memórias (occurredAt). */
+private fun formatarIntervaloEvento(primeiroIso: String?, ultimoIso: String?): String? {
+    if (primeiroIso == null || ultimoIso == null) return null
+    val primeiro = parseDataCurta(primeiroIso) ?: return null
+    val ultimo = parseDataCurta(ultimoIso) ?: return null
+    return if (primeiro == ultimo) primeiro else "$primeiro – $ultimo"
+}
+
+private fun parseDataCurta(iso: String): String? = try {
+    val dt = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
+    "${dt.dayOfMonth.toString().padStart(2, '0')}/${dt.monthNumber.toString().padStart(2, '0')}/${dt.year}"
+} catch (e: Exception) {
+    null
 }

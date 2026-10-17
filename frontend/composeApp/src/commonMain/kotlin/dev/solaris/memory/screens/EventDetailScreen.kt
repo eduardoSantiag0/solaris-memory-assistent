@@ -3,7 +3,8 @@ package dev.solaris.memory.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -84,13 +85,29 @@ fun EventDetailScreen(eventId: String, viewModel: AppViewModel, onAbrirMemoria: 
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(vertical = 14.dp),
             ) {
-                items(evento.memories) { memory ->
-                    EventMemoryRow(
-                        memory = memory,
-                        viewModel = viewModel,
-                        onClick = { onAbrirMemoria(memory.id) },
-                        onRemover = { scope.launch { viewModel.removeMemoryFromEvent(eventId, memory.id) } },
-                    )
+                itemsIndexed(evento.memories) { index, memory ->
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        // Eventos longos ficam mais fáceis de escanear com a mesma
+                        // quebra por dia usada na Conversa, já que a lista aqui
+                        // também é só uma linha do tempo de memórias.
+                        val anterior = evento.memories.getOrNull(index - 1)
+                        val diaAtual = diaDoOcorrido(memory)
+                        if (anterior == null || diaDoOcorrido(anterior) != diaAtual) {
+                            Text(
+                                "— $diaAtual —",
+                                style = solarisText.meta,
+                                color = colors.textoSuave,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        EventMemoryRow(
+                            memory = memory,
+                            viewModel = viewModel,
+                            onClick = { onAbrirMemoria(memory.id) },
+                            onRemover = { scope.launch { viewModel.removeMemoryFromEvent(eventId, memory.id) } },
+                        )
+                    }
                 }
             }
 
@@ -157,6 +174,9 @@ private fun EventMemoryRow(memory: MemoryResponse, viewModel: AppViewModel, onCl
         }
     }
 }
+
+/** Chave "dd/mm/aaaa" do dia em que a memória aconteceu (eventAt, ou createdAt na falta dele) — usada só para decidir onde quebrar o separador de dia. */
+private fun diaDoOcorrido(memory: MemoryResponse): String = formatarDataHoraEvento(memory.eventAt ?: memory.createdAt).substringBefore(" · ")
 
 private fun formatarDataHoraEvento(iso: String): String = try {
     val dt = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())

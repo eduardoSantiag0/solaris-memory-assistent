@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.solaris.memory.AppViewModel
 import dev.solaris.memory.components.IconSquareButton
@@ -111,7 +113,25 @@ fun MemoriesScreen(viewModel: AppViewModel, onAbrirDetalhe: (String) -> Unit) {
                             Text("MAIS RECENTES", style = solarisText.meta, color = colors.texto)
                         }
                     }
-                    items(vigentes) { memory -> MemoryRow(memory, viewModel, onAbrirDetalhe) }
+                    // Separador por dia — modo "linha do tempo" leve pra escanear
+                    // uma lista grande sem abrir cada ficha (achado da pesquisa de
+                    // UI 16/10), complementar ao "VIGENTES · N" já existente.
+                    itemsIndexed(vigentes) { index, memory ->
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            val anterior = vigentes.getOrNull(index - 1)
+                            val diaAtual = diaDaMemoria(memory)
+                            if (anterior == null || diaDaMemoria(anterior) != diaAtual) {
+                                Text(
+                                    "— $diaAtual —",
+                                    style = solarisText.meta,
+                                    color = colors.textoSuave,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                            MemoryRow(memory, viewModel, onAbrirDetalhe)
+                        }
+                    }
                 }
                 if (vencidas.isNotEmpty()) {
                     item {
@@ -194,6 +214,9 @@ private fun MemoryRow(memory: MemoryResponse, viewModel: AppViewModel, onAbrirDe
         onClick = { onAbrirDetalhe(memory.id) },
     )
 }
+
+/** "dd/mm/aaaa" só pra decidir onde quebrar o separador de dia — mesma base de dados do card (createdAt), não um campo novo. */
+private fun diaDaMemoria(memory: MemoryResponse): String = formatarDataHora(memory.createdAt).substringBefore(" · ")
 
 private fun formatarDataHora(iso: String?): String {
     if (iso == null) return ""

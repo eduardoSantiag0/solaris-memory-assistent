@@ -5,7 +5,6 @@ import dev.solaris.memory.dto.CreateEventRequest;
 import dev.solaris.memory.dto.EventDetailResponse;
 import dev.solaris.memory.dto.EventResponse;
 import dev.solaris.memory.dto.UpdateEventRequest;
-import dev.solaris.memory.repository.EventMemoryRepository;
 import dev.solaris.memory.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,11 +31,9 @@ import java.util.UUID;
 public class EventController {
 
     private final EventService service;
-    private final EventMemoryRepository eventMemoryRepository;
 
-    public EventController(EventService service, EventMemoryRepository eventMemoryRepository) {
+    public EventController(EventService service) {
         this.service = service;
-        this.eventMemoryRepository = eventMemoryRepository;
     }
 
     @PostMapping
@@ -79,6 +76,6 @@ public class EventController {
     }
 
     private EventResponse toResponse(Event event) {
-        return EventResponse.from(event, eventMemoryRepository.countByEventId(event.getId()));
+        return service.toResponse(event);
     }
 }

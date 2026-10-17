@@ -34,7 +34,7 @@ private fun DrawScope.fillSvgPath(pathData: String, tint: Color, k: Float) {
 enum class SolarisIcon {
     CHAT, MEMORIAS, AJUSTES, PERMANENTE, TEMPORARIA, SENSIVEL, REVELAR,
     BUSCAR, EDITAR, EXCLUIR, NOVA, ENVIAR, VOLTAR, FECHAR, ALERTA,
-    DOCUMENTO, SETA_DIREITA, ANEXO,
+    DOCUMENTO, SETA_DIREITA, ANEXO, CAMERA,
 }
 
 @Composable
@@ -228,6 +228,23 @@ fun SolarisIconGlyph(icon: SolarisIcon, tint: Color, modifier: Modifier = Modifi
                     cubicTo(p(15f, 17f).x, p(15f, 17f).y, p(16f, 16f).x, p(16f, 16f).y, p(16f, 15f).x, p(16f, 15f).y)
                     lineTo(p(16f, 9f).x, p(16f, 9f).y)
                 }
+            }
+
+            // Câmera — corpo + "pingo" do flash + lente, pro atalho de captura
+            // direta do anexo (achado da pesquisa de UI 16/10).
+            SolarisIcon.CAMERA -> {
+                path {
+                    moveTo(p(3f, 7f).x, p(3f, 7f).y)
+                    lineTo(p(9f, 7f).x, p(9f, 7f).y)
+                    lineTo(p(10.5f, 4f).x, p(10.5f, 4f).y)
+                    lineTo(p(13.5f, 4f).x, p(13.5f, 4f).y)
+                    lineTo(p(15f, 7f).x, p(15f, 7f).y)
+                    lineTo(p(21f, 7f).x, p(21f, 7f).y)
+                    lineTo(p(21f, 19f).x, p(21f, 19f).y)
+                    lineTo(p(3f, 19f).x, p(3f, 19f).y)
+                    close()
+                }
+                drawCircle(tint, radius = 3.5f * k, center = p(12f, 13f), style = stroke)
             }
 
             SolarisIcon.ALERTA -> {
